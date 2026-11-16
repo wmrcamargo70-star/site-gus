@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>G.U.S. — Controle de Jogos 2026</title>
+  <meta name="description" content="Estatísticas e rankings de gols e assistências da equipe G.U.S. — Temporada 2026" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <style>
+    :root{--gus-red:#DC2626;--gus-red-dark:#B91C1C;--gus-blue:#1E40AF;--gus-blue-dark:#1E3A8A;--gus-white:#FFFFFF;--gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-500:#6B7280;--gray-700:#374151;--gray-900:#111827;--shadow-md:0 4px 6px -1px rgba(0,0,0,.08),0 2px 4px -2px rgba(0,0,0,.04);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.05);--radius:12px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--gray-50);color:var(--gray-900);line-height:1.6;-webkit-font-smoothing:antialiased}
+    .container{max-width:1200px;margin:0 auto;padding:0 1.5rem}
+    .header{background:linear-gradient(135deg,var(--gus-blue) 0%,var(--gus-blue-dark) 100%);color:var(--gus-white);padding:1rem 0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-lg);border-bottom:4px solid var(--gus-red)}
+    .header-content{display:flex;justify-content:space-between;align-items:center;gap:2rem}
+    .brand{display:flex;align-items:center;gap:1rem}
+    .brand-logo{height:52px;width:auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+    .brand-title{font-family:'Bebas Neue',sans-serif;font-size:2rem;letter-spacing:2px;line-height:1}
+    .brand-subtitle{font-size:.78rem;opacity:.9;font-weight:500}
+    .nav{display:flex;gap:.25rem;flex-wrap:wrap}
+    .nav-link{color:var(--gus-white);text-decoration:none;padding:.5rem 1rem;border-radius:8px;font-weight:600;font-size:.9rem;transition:background .2s}
+    .nav-link:hover{background:rgba(255,255,255,.15)}
+    .hero{background:linear-gradient(135deg,rgba(220,38,38,.95) 0%,rgba(30,64,175,.95) 100%),repeating-linear-gradient(45deg,transparent,transparent 20px,rgba(255,255,255,.03) 20px,rgba(255,255,255,.03) 21px);color:var(--gus-white);padding:3.5rem 0;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;top:-50%;right:-10%;width:500px;height:500px;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 70%);pointer-events:none}
+    .hero-content{display:grid;grid-template-columns:1fr auto;gap:3rem;align-items:center;position:relative;z-index:1}
+    .hero-eyebrow{display:inline-block;background:var(--gus-white);color:var(--gus-red);padding:.25rem .75rem;border-radius:4px;font-size:.75rem;font-weight:800;letter-spacing:1px;margin-bottom:1rem;text-transform:uppercase}
+    .hero-title{font-size:clamp(1.8rem,4vw,2.75rem);font-weight:800;line-height:1.15;margin-bottom:1rem}
+    .hero-desc{font-size:1.05rem;opacity:.95;margin-bottom:1.75rem;max-width:540px}
+    .hero-cta{display:flex;gap:.75rem;flex-wrap:wrap}
+    .btn{display:inline-block;padding:.75rem 1.5rem;border-radius:8px;font-weight:700;text-decoration:none;font-size:.95rem;transition:transform .15s,box-shadow .15s;border:2px solid transparent;cursor:pointer}
+    .btn-primary{background:var(--gus-white);color:var(--gus-blue)}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+    .btn-secondary{background:transparent;color:var(--gus-white);border-color:var(--gus-white)}
+    .btn-secondary:hover{background:rgba(255,255,255,.15)}
+    .hero-shield{width:170px;height:auto;filter:drop-shadow(0 10px 20px rgba(0,0,0,.3))}
+    .hero-mascote{width:240px;height:auto;max-height:320px;object-fit:contain;filter:drop-shadow(0 15px 25px rgba(0,0,0,.45))}
+    .hero-visuals{display:flex;align-items:center;gap:1rem}
+    .section{padding:4rem 0}
+    .section-alt{background:var(--gus-white)}
+    .section-header{text-align:center;margin-bottom:2.5rem}
+    .section-title{font-size:clamp(1.5rem,3vw,2.25rem);font-weight:800;color:var(--gus-blue-dark);margin-bottom:.5rem}
+    .section-title::after{content:'';display:block;width:60px;height:4px;background:var(--gus-red);margin:.75rem auto 0;border-radius:2px}
+    .section-desc{color:var(--gray-500);font-size:1rem}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem}
+    .stat-card{background:var(--gus-white);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow-md);border-left:4px solid var(--gus-blue);transition:transform .15s,box-shadow .15s}
+    .stat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg)}
+    .stat-card.red{border-left-color:var(--gus-red)}
+    .stat-label{font-size:.75rem;text-transform:uppercase;color:var(--gray-500);font-weight:700;letter-spacing:.5px}
+    .stat-value{font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--gray-900);line-height:1.1;margin-top:.25rem}
+    .stat-sub{font-size:.8rem;color:var(--gray-500);margin-top:.25rem}
+    .dashboard-row{display:grid;grid-template-columns:1fr;gap:1.5rem;margin-bottom:1.5rem}
+    .dashboard-row.two-col{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+    .card{background:var(--gus-white);border-radius:var(--radius);padding:1.5rem;box-shadow:var(--shadow-md);border-top:3px solid var(--gus-blue)}
+    .card-title{font-size:1.1rem;font-weight:700;color:var(--gus-blue-dark);margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem}
+    .card-subtitle{font-size:.85rem;color:var(--gray-500);margin-bottom:1rem}
+    .badge{display:inline-block;font-size:.7rem;font-weight:800;padding:.15rem .5rem;border-radius:4px;letter-spacing:.5px}
+    .badge-red{background:var(--gus-red);color:white}
+    .badge-blue{background:var(--gus-blue);color:white}
+    .chart-card{border-top-color:var(--gus-red)}
+    .period-filter{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.75rem}
+    .period-chip{font-family:inherit;font-size:.82rem;font-weight:700;padding:.45rem .95rem;border-radius:999px;border:2px solid var(--gray-200);background:var(--gus-white);color:var(--gray-700);cursor:pointer;transition:background .15s,border-color .15s,color .15s;white-space:nowrap}
+    .period-chip:hover{border-color:var(--gus-blue);color:var(--gus-blue)}
+    .period-chip.active{background:var(--gus-blue);border-color:var(--gus-blue);color:var(--gus-white)}
+    .period-select{font-family:inherit;font-size:.82rem;font-weight:700;padding:.42rem .9rem;border-radius:999px;border:2px solid var(--gray-200);background:var(--gus-white);color:var(--gray-700);cursor:pointer}
+    .period-select:focus{outline:none;border-color:var(--gus-blue)}
+    .period-select.active{border-color:var(--gus-blue);background:#EFF6FF;color:var(--gus-blue-dark)}
+    .period-custom{display:none;flex-wrap:wrap;gap:.5rem;align-items:center;margin-bottom:.75rem;font-size:.85rem;font-weight:600;color:var(--gray-500)}
+    .period-custom.open{display:flex}
+    .period-custom input{font-family:inherit;font-size:.85rem;padding:.4rem .7rem;border:2px solid var(--gray-200);border-radius:8px;background:var(--gus-white);color:var(--gray-900)}
+    .period-custom input:focus{outline:none;border-color:var(--gus-blue)}
+    .period-summary{display:flex;flex-wrap:wrap;gap:.3rem 1.25rem;font-size:.85rem;color:var(--gray-500);margin-bottom:1rem;padding:.6rem .9rem;background:var(--gray-50);border-radius:8px}
+    .period-summary b{color:var(--gray-900)}
+    .chart-empty{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:var(--gray-500);font-weight:600;text-align:center;padding:1rem}
+    .chart-wrapper{height:320px;position:relative}
+    .podium{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+    .podium-item{display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:8px;background:var(--gray-50);transition:background .15s}
+    .podium-item:hover{background:var(--gray-100)}
+    .podium-rank{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:var(--gray-200);color:var(--gray-700);flex-shrink:0}
+    .podium-item.rank-1 .podium-rank{background:#FCD34D;color:#78350F}
+    .podium-item.rank-2 .podium-rank{background:#E5E7EB;color:#374151}
+    .podium-item.rank-3 .podium-rank{background:#FDBA74;color:#7C2D12}
+    .podium-name{flex:1;font-weight:600;color:var(--gray-900)}
+    .podium-name small{display:block;font-weight:400;font-size:.75rem;color:var(--gray-500)}
+    .podium-value{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--gus-blue-dark);letter-spacing:1px}
+    .tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;border-bottom:2px solid var(--gray-200)}
+    .tab{background:none;border:none;padding:.75rem 1.5rem;font-size:1rem;font-weight:700;color:var(--gray-500);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;font-family:inherit}
+    .tab:hover{color:var(--gus-blue)}
+    .tab-active{color:var(--gus-blue-dark);border-bottom-color:var(--gus-red)}
+    .tab-content.hidden{display:none}
+    .rank-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1.5rem}
+    .rank-table{width:100%;border-collapse:collapse}
+    .rank-table tr{border-bottom:1px solid var(--gray-100)}
+    .rank-table tr:last-child{border-bottom:none}
+    .rank-table td{padding:.65rem .5rem;font-size:.95rem}
+    .rank-table td:first-child{font-family:'Bebas Neue',sans-serif;font-size:1.2rem;color:var(--gray-500);width:40px;text-align:center}
+    .rank-table td:nth-child(2){font-weight:600}
+    .rank-table td:nth-child(3){text-align:right;font-family:'Bebas Neue',sans-serif;font-size:1.3rem;color:var(--gus-blue-dark);letter-spacing:1px}
+    .rank-table tr.top-1 td:first-child{color:#B45309;font-weight:800}
+    .rank-table tr.top-2 td:first-child{color:#6B7280;font-weight:800}
+    .rank-table tr.top-3 td:first-child{color:#C2410C;font-weight:800}
+    .rank-age{font-size:.75rem;color:var(--gray-500);font-weight:400}
+    .filter-bar{display:flex;gap:.75rem;margin-bottom:1.5rem;flex-wrap:wrap}
+    .filter-input,.filter-select{padding:.6rem 1rem;border:2px solid var(--gray-200);border-radius:8px;font-size:.95rem;font-family:inherit;background:var(--gus-white);transition:border-color .15s}
+    .filter-input{flex:1;min-width:200px}
+    .filter-input:focus,.filter-select:focus{outline:none;border-color:var(--gus-blue)}
+    .table-card{padding:0;overflow-x:auto}
+    .full-table{width:100%;border-collapse:collapse;min-width:600px}
+    .full-table thead{background:linear-gradient(135deg,var(--gus-blue) 0%,var(--gus-blue-dark) 100%);color:var(--gus-white)}
+    .full-table th{padding:.85rem 1rem;text-align:left;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;user-select:none;transition:background .15s}
+    .full-table th:hover{background:rgba(255,255,255,.1)}
+    .full-table th.sorted-desc::after{content:' ↓';opacity:.8}
+    .full-table th.sorted-asc::after{content:' ↑';opacity:.8}
+    .full-table td{padding:.7rem 1rem;border-bottom:1px solid var(--gray-100);font-size:.95rem}
+    .full-table tbody tr:hover{background:var(--gray-50)}
+    .full-table td:nth-child(1){font-weight:600;color:var(--gray-900)}
+    .full-table td:nth-child(3),.full-table td:nth-child(4),.full-table td:nth-child(5),.full-table td:nth-child(6){font-family:'Bebas Neue',sans-serif;font-size:1.15rem;color:var(--gus-blue-dark);letter-spacing:1px}
+    .tag{display:inline-block;padding:.15rem .55rem;border-radius:4px;font-size:.7rem;font-weight:700;letter-spacing:.3px}
+    .tag-mensalista{background:#DBEAFE;color:var(--gus-blue-dark)}
+    .tag-corneta{background:#FEE2E2;color:var(--gus-red-dark)}
+    .footer{background:var(--gus-blue-dark);color:var(--gus-white);padding:2rem 0;margin-top:3rem;border-top:4px solid var(--gus-red)}
+    .footer-content{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+    .footer-update{opacity:.7;font-size:.85rem}
+    @media (max-width:768px){
+      .header{padding:.75rem 0}
+      .header-content{flex-direction:column;gap:.5rem;align-items:flex-start}
+      .brand{width:100%;justify-content:center}
+      .brand-logo{height:44px}
+      .brand-title{font-size:1.5rem}
+      .brand-subtitle{font-size:.7rem;text-align:center}
+      .nav{justify-content:center;width:100%;gap:.15rem;flex-wrap:wrap}
+      .nav-link{padding:.4rem .65rem;font-size:.82rem}
+      .hero{padding:2.5rem 0 2rem}
+      .hero-content{grid-template-columns:1fr;text-align:center;gap:1.5rem}
+      .hero-cta{justify-content:center}
+      .hero-shield{margin:0 auto;width:120px}
+      .hero-mascote{margin:0 auto;width:160px;max-height:220px}
+      .hero-visuals{justify-content:center}
+      .hero-title{font-size:1.6rem}
+      .hero-desc{font-size:.95rem}
+      .section{padding:2rem 0}
+      .section-title{font-size:1.5rem}
+      .section-header{margin-bottom:1.5rem}
+      .container{padding:0 1rem}
+      .card{padding:1rem}
+      .chart-wrapper{height:280px}
+      .period-filter{gap:.4rem}
+      .period-chip,.period-select{font-size:.76rem;padding:.35rem .7rem}
+      .period-summary{font-size:.8rem;gap:.2rem .9rem}
+      .stat-card{padding:1rem}
+      .stat-value{font-size:2rem}
+      .podium-item{padding:.6rem;gap:.5rem}
+      .podium-rank{width:30px;height:30px;font-size:1.2rem}
+      .podium-name{font-size:.9rem;min-width:0;overflow:hidden;text-overflow:ellipsis}
+      .podium-value{font-size:1.3rem}
+      .upload-card{padding:1.25rem}
+      .login-card{padding:1.5rem 1.25rem}
+      .tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+      .tab{padding:.6rem 1rem;font-size:.9rem;white-space:nowrap}
+      .rank-table td{padding:.5rem .35rem;font-size:.85rem}
+      .rank-table td:nth-child(3){font-size:1.1rem}
+      .filter-bar{flex-direction:column;gap:.5rem}
+      .filter-input,.filter-select{width:100%}
+    }
+  
+    .upload-card{background:var(--gus-white);border-radius:var(--radius);padding:2rem;box-shadow:var(--shadow-md);border-top:3px solid var(--gus-red);max-width:720px;margin:0 auto}
+    .upload-card h3{color:var(--gus-blue-dark);font-size:1.2rem;margin-bottom:.5rem}
+    .upload-card p.lead{color:var(--gray-500);font-size:.95rem;margin-bottom:1.5rem}
+    .upload-card label{display:block;font-size:.85rem;font-weight:700;color:var(--gray-700);margin-top:1.25rem;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px}
+    .upload-card input[type=text],.upload-card input[type=password]{width:100%;padding:.7rem 1rem;border:2px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:.95rem;background:var(--gray-50)}
+    .upload-card input[type=password]:focus,.upload-card input[type=text]:focus{outline:none;border-color:var(--gus-blue);background:var(--gus-white)}
+    .upload-card small{display:block;font-size:.78rem;color:var(--gray-500);margin-top:.3rem}
+    .upload-card small a{color:var(--gus-blue);font-weight:600}
+    .upload-dropzone{margin-top:.5rem;padding:2rem 1rem;border:2px dashed var(--gray-300);border-radius:10px;background:var(--gray-50);text-align:center;cursor:pointer;transition:background .15s,border-color .15s}
+    .upload-dropzone:hover{background:#EFF6FF;border-color:var(--gus-blue)}
+    .upload-dropzone.has-file{background:#F0FDF4;border-color:#10B981}
+    .upload-dropzone-icon{font-size:2rem;color:var(--gus-blue);font-family:'Bebas Neue',sans-serif}
+    .upload-dropzone-text{font-size:.95rem;color:var(--gray-700);margin-top:.5rem}
+    .upload-dropzone-hint{font-size:.78rem;color:var(--gray-500);margin-top:.25rem}
+    .upload-dropzone input{display:none}
+    .upload-actions{margin-top:1.5rem;display:flex;gap:.5rem;flex-wrap:wrap}
+    .upload-btn{cursor:pointer;border:none;font-family:inherit;padding:.85rem 1.5rem;border-radius:8px;font-weight:700;font-size:.95rem;transition:opacity .15s,transform .1s}
+    .upload-btn:not(:disabled):active{transform:translateY(1px)}
+    .upload-btn-publish{background:var(--gus-red);color:#fff}
+    .upload-btn-publish:disabled{background:var(--gray-300);color:var(--gray-500);cursor:not-allowed}
+    .upload-btn-publish:not(:disabled):hover{background:var(--gus-red-dark)}
+    .upload-btn-reset{background:var(--gray-200);color:var(--gray-700)}
+    .upload-msg{padding:.85rem 1.1rem;border-radius:8px;margin-top:1rem;font-size:.9rem;line-height:1.5}
+    .upload-msg-success{background:#D1FAE5;color:#065F46;border-left:3px solid #10B981}
+    .upload-msg-error{background:#FEE2E2;color:#991B1B;border-left:3px solid var(--gus-red)}
+    .upload-msg-info{background:#DBEAFE;color:var(--gus-blue-dark);border-left:3px solid var(--gus-blue)}
+    .upload-preview{background:var(--gray-50);padding:1.25rem;border-radius:10px;margin-top:1.25rem;border:1px solid var(--gray-200)}
+    .upload-preview h4{color:var(--gus-blue-dark);font-size:.95rem;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.5px}
+    .upload-preview .row{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px dashed var(--gray-200);font-size:.9rem}
+    .upload-preview .row:last-child{border-bottom:none}
+    .upload-preview .row .label{color:var(--gray-500);font-weight:600}
+    .upload-preview .row .val{color:var(--gray-900);text-align:right}
+    .upload-preview .diff-old{color:var(--gray-500);text-decoration:line-through;font-weight:400;margin-right:.4rem}
+    .upload-preview .diff-new{color:var(--gus-blue-dark);font-weight:700}
+    .upload-preview .diff-same{color:var(--gray-700);font-weight:600}
+
+  
+    .login-card{background:var(--gus-white);border-radius:var(--radius);padding:2.5rem 2rem;box-shadow:var(--shadow-md);border-top:3px solid var(--gus-blue);max-width:420px;margin:0 auto;text-align:center}
+    .login-card h3{color:var(--gus-blue-dark);font-size:1.3rem;margin-bottom:.25rem}
+    .login-card .lead{color:var(--gray-500);font-size:.9rem;margin-bottom:1.5rem}
+    .login-card label{display:block;font-size:.78rem;font-weight:700;color:var(--gray-700);margin-top:1rem;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px;text-align:left}
+    .login-card input{width:100%;padding:.75rem 1rem;border:2px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:1rem;background:var(--gray-50)}
+    .login-card input:focus{outline:none;border-color:var(--gus-blue);background:var(--gus-white)}
+    .upload-token{width:100%;padding:.75rem 1rem;border:2px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:.95rem;background:var(--gray-50)}
+    .upload-token:focus{outline:none;border-color:var(--gus-blue);background:var(--gus-white)}
+    .upload-token-hint{font-size:.8rem;color:var(--gray-500);margin-top:.35rem}
+    .login-card button{margin-top:1.5rem;width:100%;padding:.85rem;background:var(--gus-blue);color:#fff;border:none;border-radius:8px;font-family:inherit;font-weight:700;font-size:1rem;cursor:pointer;transition:background .15s}
+    .login-card button:hover{background:var(--gus-blue-dark)}
+    .login-error{color:var(--gus-red);font-size:.85rem;margin-top:.75rem;font-weight:600}
+    .logged-bar{background:#D1FAE5;color:#065F46;padding:.75rem 1.25rem;border-radius:8px;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;font-size:.9rem;max-width:720px;margin-left:auto;margin-right:auto}
+    .logged-bar .logout-btn{background:transparent;color:#065F46;border:1px solid #065F46;padding:.3rem .75rem;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit}
+    .logged-bar .logout-btn:hover{background:#065F46;color:#fff}
+
+  
+    .rank-group{margin-bottom:2.5rem}
+    .rank-group:last-child{margin-bottom:0}
+    .rank-group-title{text-align:center;margin-bottom:1.25rem;font-size:1.05rem;color:var(--gus-gray-700,#374151);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+    .rank-group-title .badge{font-size:.8rem;padding:.25rem .75rem}
+
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container header-content">
+      <div class="brand">
+        <svg class="brand-logo" viewBox="0 0 200 165" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="200" height="165" fill="#1E40AF" rx="4"/>
+          <rect x="6" y="6" width="188" height="153" fill="#FFFFFF" rx="2"/>
+          <rect x="14" y="14" width="56" height="137" fill="#DC2626"/>
+          <rect x="14" y="95" width="172" height="56" fill="#1E40AF"/>
+          <polygon points="42,28 47,42 62,42 50,51 55,65 42,56 29,65 34,51 22,42 37,42" fill="#FFFFFF"/>
+          <text x="100" y="135" font-family="Arial Black, sans-serif" font-size="34" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">G.U.S.</text>
+        </svg>
+        <div>
+          <h1 class="brand-title">G.U.S.</h1>
+          <p class="brand-subtitle">Controle de Jogos · Coordenação 2026</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <a href="#dashboard" class="nav-link">Dashboard</a>
+        <a href="#rankings" class="nav-link">Rankings</a>
+        <a href="#jogadores" class="nav-link">Jogadores</a>
+      
+        <a href="#admin" class="nav-link">Admin</a>
+      </nav>
+    </div>
+  </header>
+  <section class="hero">
+    <div class="container hero-content">
+      <div class="hero-text">
+        <span class="hero-eyebrow">Temporada 2026</span>
+        <h2 class="hero-title">Estatísticas oficiais do G.U.S.</h2>
+        <p class="hero-desc">Acompanhe artilharia, assistências e o desempenho de cada jogador ao longo da temporada.</p>
+        <div class="hero-cta">
+          <a href="#dashboard" class="btn btn-primary">Ver Dashboard</a>
+          <a href="#rankings" class="btn btn-secondary">Rankings +60 / -60</a>
+        </div>
+      </div>
+      <div class="hero-visuals">
+        <img class="hero-mascote" src="mascote.png" alt="Mascote G.U.S." />
+        <svg class="hero-shield" viewBox="0 0 200 165" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="200" height="165" fill="#1E40AF" rx="6"/>
+          <rect x="8" y="8" width="184" height="149" fill="#FFFFFF" rx="3"/>
+          <rect x="18" y="18" width="56" height="129" fill="#DC2626"/>
+          <rect x="18" y="93" width="164" height="54" fill="#1E40AF"/>
+          <polygon points="46,32 51,46 66,46 54,55 59,69 46,60 33,69 38,55 26,46 41,46" fill="#FFFFFF"/>
+          <text x="100" y="132" font-family="Arial Black, sans-serif" font-size="34" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="2">G.U.S.</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+  <section id="dashboard" class="section">
+    <div class="container">
+      <div class="section-header"><h2 class="section-title">Dashboard Geral</h2><p class="section-desc">Visão consolidada da temporada</p></div>
+      <div class="stats-grid" id="stats-cards"></div>
+      <div class="dashboard-row">
+        <div class="card chart-card">
+          <h3 class="card-title">Evolução por Jogo</h3>
+          <p class="card-subtitle">Gols e assistências ao longo da temporada</p>
+          <div class="period-filter" role="group" aria-label="Filtrar período do gráfico">
+            <button type="button" class="period-chip active" data-period="all">Período completo</button>
+            <button type="button" class="period-chip" data-period="12">Últimos 12 meses</button>
+            <button type="button" class="period-chip" data-period="6">Últimos 6 meses</button>
+            <button type="button" class="period-chip" data-period="3">Últimos 3 meses</button>
+            <button type="button" class="period-chip" data-period="1">Último mês</button>
+            <select class="period-select" id="period-select" aria-label="Escolher mês ou ano"></select>
+            <button type="button" class="period-chip" data-period="custom">Personalizado</button>
+          </div>
+          <div class="period-custom" id="period-custom">
+            <label for="period-from">De</label><input type="date" id="period-from">
+            <label for="period-to">até</label><input type="date" id="period-to">
+          </div>
+          <div class="period-summary" id="period-summary"></div>
+          <div class="chart-wrapper"><canvas id="evolucaoChart"></canvas><div class="chart-empty" id="chart-empty">Nenhum jogo nesse período</div></div>
+        </div>
+      </div>
+      <div class="dashboard-row two-col">
+        <div class="card"><h3 class="card-title"><span class="badge badge-red">TOP 5</span> Artilheiros</h3><ol class="podium" id="top-gols"></ol></div>
+        <div class="card"><h3 class="card-title"><span class="badge badge-blue">TOP 5</span> Assistências</h3><ol class="podium" id="top-assists"></ol></div>
+      </div>
+    </div>
+  </section>
+  <section id="rankings" class="section section-alt">
+    <div class="container">
+      <div class="section-header"><h2 class="section-title">Rankings por Categoria</h2><p class="section-desc">Gols e assistências separados por faixa etária</p></div>
+      <div class="rank-group">
+        <h3 class="rank-group-title"><span class="badge badge-red">+60 anos</span></h3>
+        <div class="rank-grid">
+          <div class="card"><h3 class="card-title"><span class="badge badge-red">+60</span> Artilheiros</h3><table class="rank-table" id="rank-mais60-gols"></table></div>
+          <div class="card"><h3 class="card-title"><span class="badge badge-blue">+60</span> Assistências</h3><table class="rank-table" id="rank-mais60-assists"></table></div>
+        </div>
+      </div>
+
+      <div class="rank-group">
+        <h3 class="rank-group-title"><span class="badge badge-blue">-60 anos</span></h3>
+        <div class="rank-grid">
+          <div class="card"><h3 class="card-title"><span class="badge badge-red">-60</span> Artilheiros</h3><table class="rank-table" id="rank-menos60-gols"></table></div>
+          <div class="card"><h3 class="card-title"><span class="badge badge-blue">-60</span> Assistências</h3><table class="rank-table" id="rank-menos60-assists"></table></div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="jogadores" class="section">
+    <div class="container">
+      <div class="section-header"><h2 class="section-title">Todos os Jogadores</h2><p class="section-desc">Tabela completa — clique no cabeçalho para ordenar</p></div>
+      <div class="filter-bar">
+        <input type="text" id="filter-input" placeholder="Buscar por apelido..." class="filter-input" />
+        <select id="filter-categoria" class="filter-select">
+          <option value="todos">Todas as idades</option>
+          <option value="mais65">+60 anos</option>
+          <option value="menos65">-60 anos</option>
+        </select>
+      </div>
+      <div class="card table-card">
+        <table class="full-table" id="full-table">
+          <thead><tr>
+            <th data-sort="apelido">Apelido</th>
+            <th data-sort="idade">Idade</th>
+            <th data-sort="gols" class="sorted-desc">Gols</th>
+            <th data-sort="mediaGols">Média Gols</th>
+            <th data-sort="assists">Assistências</th>
+            <th data-sort="mediaAssists">Média Assist.</th>
+            <th data-sort="classif">Categoria</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+  <section id="admin" class="section section-alt">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Admin</h2>
+        <p class="section-desc">Área restrita — gerenciamento de dados do site</p>
+      </div>
+      <div class="login-card" id="login-card">
+        <h3>Acesso restrito</h3>
+        <p class="lead">Entre com suas credenciais para gerenciar os dados.</p>
+        <label for="login-user">Usuário</label>
+        <input type="text" id="login-user" autocomplete="username" />
+        <label for="login-pass">Senha</label>
+        <input type="password" id="login-pass" autocomplete="current-password" />
+        <button id="login-btn">Entrar</button>
+        <div class="login-error" id="login-error" style="display:none"></div>
+      </div>
+
+      <div id="admin-content" style="display:none">
+        <div class="logged-bar">
+          <span>Conectado como <strong id="logged-user"></strong></span>
+          <button class="logout-btn" id="logout-btn">Sair</button>
+        </div>
+        <div class="upload-card">
+        <h3>Carregar planilha</h3>
+        <p class="lead">Envie a planilha de controle do G.U.S. (.xlsx). O site mostra uma prévia e publica direto no ar.</p>
+
+        <div class="upload-section-label" style="font-size:.85rem;font-weight:700;color:var(--gray-700);margin-top:1.25rem;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px">Planilha</div>
+        <label class="upload-dropzone" for="upload-file" id="upload-dropzone">
+          <div class="upload-dropzone-icon">+</div>
+          <div class="upload-dropzone-text">Clique para escolher ou arraste a planilha aqui</div>
+          <div class="upload-dropzone-hint">Aceita apenas arquivos .xlsx</div>
+          <input type="file" id="upload-file" accept=".xlsx,.xlsm,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+        </label>
+
+        <div class="upload-section-label" style="font-size:.85rem;font-weight:700;color:var(--gray-700);margin-top:1.25rem;margin-bottom:.4rem;text-transform:uppercase;letter-spacing:.5px">Token do GitHub</div>
+        <input type="password" id="upload-token" class="upload-token" placeholder="Cole aqui o token (github_pat_...)" autocomplete="off" spellcheck="false" />
+        <div class="upload-token-hint">Só na primeira vez: depois fica salvo neste navegador. Cada coordenador usa o próprio token.</div>
+
+        <div id="upload-msg"></div>
+        <div id="upload-preview"></div>
+
+        <div class="upload-actions">
+          <button class="upload-btn upload-btn-publish" id="upload-publish" disabled>Publicar no site</button>
+          <button class="upload-btn upload-btn-reset" id="upload-reset">Limpar</button>
+        </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><div class="container footer-content"><p>G.U.S. · Coordenação MGM 2026</p><p class="footer-update">Atualizado em <span id="updated-at"></span></p></div></footer>
+  <script>
+    /*GUS_DATA_START*/const DATA = {"totais":{"jogos":81,"gols":588,"assists":450,"mediaGols":7.26,"mediaAssists":5.56},"timeline":[{"date":"2025-12-13","gols":12,"assists":9},{"date":"2025-12-17","gols":12,"assists":7},{"date":"2025-12-20","gols":11,"assists":7},{"date":"2025-12-24","gols":7,"assists":5},{"date":"2025-12-27","gols":8,"assists":5},{"date":"2025-12-31","gols":8,"assists":7},{"date":"2026-01-03","gols":10,"assists":8},{"date":"2026-01-07","gols":10,"assists":7},{"date":"2026-01-10","gols":9,"assists":9},{"date":"2026-01-14","gols":10,"assists":9},{"date":"2026-01-17","gols":6,"assists":5},{"date":"2026-01-21","gols":4,"assists":4},{"date":"2026-01-24","gols":11,"assists":8},{"date":"2026-01-28","gols":7,"assists":6},{"date":"2026-01-31","gols":6,"assists":4},{"date":"2026-02-04","gols":8,"assists":6},{"date":"2026-02-07","gols":4,"assists":4},{"date":"2026-02-11","gols":13,"assists":12},{"date":"2026-02-14","gols":5,"assists":3},{"date":"2026-02-18","gols":9,"assists":8},{"date":"2026-02-21","gols":7,"assists":5},{"date":"2026-02-25","gols":5,"assists":4},{"date":"2026-02-28","gols":18,"assists":12},{"date":"2026-03-04","gols":5,"assists":4},{"date":"2026-03-07","gols":8,"assists":8},{"date":"2026-03-14","gols":4,"assists":4},{"date":"2026-03-18","gols":9,"assists":7},{"date":"2026-03-21","gols":7,"assists":5},{"date":"2026-03-25","gols":10,"assists":6},{"date":"2026-03-28","gols":5,"assists":3},{"date":"2026-04-01","gols":10,"assists":9},{"date":"2026-04-04","gols":8,"assists":6},{"date":"2026-04-08","gols":6,"assists":6},{"date":"2026-04-11","gols":5,"assists":4},{"date":"2026-04-15","gols":6,"assists":6},{"date":"2026-04-18","gols":7,"assists":5},{"date":"2026-04-22","gols":6,"assists":5},{"date":"2026-04-25","gols":11,"assists":10},{"date":"2026-04-28","gols":6,"assists":5},{"date":"2026-05-02","gols":12,"assists":11},{"date":"2026-05-06","gols":12,"assists":12},{"date":"2026-05-09","gols":8,"assists":7},{"date":"2026-05-13","gols":7,"assists":6},{"date":"2026-05-23","gols":6,"assists":5},{"date":"2026-05-27","gols":3,"assists":3},{"date":"2026-05-30","gols":1,"assists":0},{"date":"2026-06-03","gols":5,"assists":2},{"date":"2026-06-10","gols":6,"assists":6},{"date":"2026-06-13","gols":7,"assists":6},{"date":"2026-06-17","gols":12,"assists":7},{"date":"2026-06-20","gols":9,"assists":7},{"date":"2026-06-27","gols":4,"assists":2},{"date":"2026-07-01","gols":7,"assists":2},{"date":"2026-07-04","gols":7,"assists":5},{"date":"2026-07-08","gols":7,"assists":5},{"date":"2026-07-11","gols":5,"assists":5},{"date":"2026-07-18","gols":4,"assists":4},{"date":"2026-07-25","gols":2,"assists":1},{"date":"2026-07-29","gols":6,"assists":5},{"date":"2026-08-01","gols":6,"assists":4},{"date":"2026-08-05","gols":8,"assists":4},{"date":"2026-08-08","gols":4,"assists":3},{"date":"2026-08-12","gols":6,"assists":5},{"date":"2026-08-15","gols":2,"assists":2},{"date":"2026-08-22","gols":3,"assists":1},{"date":"2026-08-29","gols":7,"assists":4},{"date":"2026-09-02","gols":12,"assists":10},{"date":"2026-09-05","gols":9,"assists":7},{"date":"2026-09-09","gols":4,"assists":2},{"date":"2026-09-16","gols":5,"assists":3},{"date":"2026-09-19","gols":9,"assists":6},{"date":"2026-09-26","gols":6,"assists":4},{"date":"2026-09-30","gols":7,"assists":3},{"date":"2026-10-03","gols":2,"assists":2},{"date":"2026-10-07","gols":5,"assists":5},{"date":"2026-10-10","gols":9,"assists":7},{"date":"2026-10-14","gols":8,"assists":6},{"date":"2026-10-21","gols":6,"assists":6},{"date":"2026-10-24","gols":12,"assists":9},{"date":"2026-10-28","gols":9,"assists":7},{"date":"2026-10-31","gols":6,"assists":2}],"players":[{"apelido":"Claudio Goes","nome":"Claudio José de Góes","idade":64,"classif":"Mensalista","gols":6,"assists":8},{"apelido":"Devanir","nome":"Devanir José Zanqueta","idade":77,"classif":"Mensalista","gols":1,"assists":0},{"apelido":"Fernando","nome":"Fernando A.Pereira Leite","idade":59,"classif":"Mensalista","gols":75,"assists":45},{"apelido":"Guzzon","nome":"Marcos Aurelio Guzzon","idade":56,"classif":"Mensalista","gols":36,"assists":32},{"apelido":"Mabel","nome":"Paulo de Tarso Barbosa","idade":62,"classif":"Mensalista","gols":4,"assists":1},{"apelido":"Masetto","nome":"Paulo Roberto Masetto","idade":73,"classif":"Mensalista","gols":10,"assists":2},{"apelido":"Mauricio","nome":"Mauricio Santana","idade":54,"classif":"Mensalista","gols":40,"assists":14},{"apelido":"Roberto Godinho","nome":"Roberto Godinho","idade":78,"classif":"Mensalista","gols":10,"assists":3},{"apelido":"Waguinho","nome":"Wagner Marcelo Rocha Camargo","idade":56,"classif":"Mensalista","gols":43,"assists":29},{"apelido":"Elcio","nome":"Elcio Yamada","idade":53,"classif":"Mensalista","gols":22,"assists":23},{"apelido":"James","nome":"James Beal Munhoz","idade":77,"classif":"Mensalista","gols":27,"assists":20},{"apelido":"Mello","nome":"Alexandre Lopes de Mello","idade":59,"classif":"Mensalista","gols":31,"assists":13},{"apelido":"Mido","nome":"Romildo de Araujo Mido","idade":63,"classif":"Mensalista","gols":32,"assists":33},{"apelido":"Zezinho","nome":"José Rodrigues Santiago Neto","idade":57,"classif":"Mensalista","gols":16,"assists":8},{"apelido":"Dudu","nome":"Vagner Camargo Borges","idade":62,"classif":"Mensalista","gols":14,"assists":9},{"apelido":"Lico","nome":"Carlos Alberto S. de Alcantara","idade":59,"classif":"Mensalista","gols":6,"assists":13},{"apelido":"Olavo","nome":"Olavo Domingues da Silva","idade":70,"classif":"Mensalista","gols":13,"assists":14},{"apelido":"Roberto R6","nome":"Roberto Gomes da Silva","idade":62,"classif":"Mensalista","gols":27,"assists":10},{"apelido":"Gigio","nome":"Adilson Roberto de Camargo","idade":58,"classif":"Mensalista","gols":21,"assists":12},{"apelido":"Ivan","nome":"Ivan Kleber Candido de Carvalho","idade":53,"classif":"Mensalista","gols":3,"assists":7},{"apelido":"Arruda","nome":"Marcos Roberto Martins Arruda","idade":50,"classif":"Mensalista","gols":8,"assists":8},{"apelido":"Sandrinho","nome":"Sandro Angelo de Oliveira","idade":55,"classif":"Mensalista","gols":13,"assists":2},{"apelido":"João da Serra","nome":"João Clarindo Bezerra","idade":63,"classif":"Mensalista","gols":2,"assists":1},{"apelido":"Vinicio","nome":"Vinicio Cesar Pensa","idade":77,"classif":"Mensalista","gols":4,"assists":7},{"apelido":"Scooby","nome":"Altamir José Ximenes","idade":59,"classif":"Mensalista","gols":1,"assists":1},{"apelido":"Pingão","nome":"Carlos Alberto Lopes","idade":58,"classif":"Mensalista","gols":7,"assists":3},{"apelido":"Ruan","nome":"Ruan Augusto Domingues da Silva","idade":27,"classif":"Mensalista","gols":3,"assists":1},{"apelido":"João Batista","nome":"João Batista da Silva","idade":80,"classif":"Mensalista","gols":21,"assists":8},{"apelido":"Neimar","nome":"Neimar Godinho","idade":58,"classif":"Mensalista","gols":4,"assists":14},{"apelido":"Sangrin","nome":"Wilson Gonçalves da Silva","idade":66,"classif":"Mensalista","gols":2,"assists":1},{"apelido":"Samir","nome":"Samir Chad","idade":49,"classif":"Mensalista","gols":2,"assists":2},{"apelido":"Zito","nome":"Benedito Roque de Campos","idade":66,"classif":"Mensalista","gols":1,"assists":0},{"apelido":"Zé","nome":"Zé","idade":52,"classif":"Mensalista","gols":1,"assists":4},{"apelido":"André","nome":"André Aparecido Cardoso","idade":72,"classif":"Mensalista","gols":11,"assists":16},{"apelido":"Cebola","nome":"Marcio Tadeu de Almeida e Silva","idade":57,"classif":"Mensalista","gols":10,"assists":15},{"apelido":"Edson","nome":"Edon Paulino","idade":60,"classif":"Mensalista","gols":1,"assists":1},{"apelido":"Gika","nome":"João Carlos Cruz","idade":68,"classif":"Mensalista","gols":1,"assists":2},{"apelido":"Sandro Godinho","nome":"Sandro Lucio Godinho","idade":57,"classif":"Mensalista","gols":1,"assists":5},{"apelido":"Keller","nome":"Keller Pereira Chagas","idade":58,"classif":"Mensalista","gols":2,"assists":5},{"apelido":"Makey","nome":"Alexandre Makei de Almeida","idade":55,"classif":"Mensalista","gols":2,"assists":6},{"apelido":"Putch","nome":"Sergio Luiz de Oliveira","idade":59,"classif":"Mensalista","gols":1,"assists":2},{"apelido":"Odilon","nome":"Odilon Roberto Costa Ferreira","idade":58,"classif":"Mensalista","gols":8,"assists":5},{"apelido":"Dulão","nome":"Eduardo Lombardi","idade":53,"classif":"Mensalista","gols":5,"assists":6},{"apelido":"Efaneu","nome":"Efaneu Nolasco Godinho","idade":79,"classif":"Mensalista","gols":2,"assists":1},{"apelido":"Jayme","nome":"Jayme","idade":72,"classif":"Mensalista","gols":3,"assists":4},{"apelido":"Rafero","nome":"Rafael Billar de Almeida","idade":49,"classif":"Mensalista","gols":1,"assists":1},{"apelido":"Falcão","nome":"João Luiz Falcão","idade":56,"classif":"Mensalista","gols":5,"assists":2},{"apelido":"Bira","nome":"Bira","idade":46,"classif":"Mensalista","gols":2,"assists":3},{"apelido":"Marcelo Gouveia","nome":"Marcelo Gouveia","idade":51,"classif":"Mensalista","gols":1,"assists":3},{"apelido":"Cabo Jean","nome":"Cabo Jean","idade":45,"classif":"Mensalista","gols":16,"assists":9},{"apelido":"Fernando Ferreira","nome":"Fernando Ferreira","idade":41,"classif":"Mensalista","gols":1,"assists":0},{"apelido":"Meneguesso","nome":"Julio Cesar Meneguesso","idade":61,"classif":"Mensalista","gols":4,"assists":5},{"apelido":"Ricardo","nome":"Ricardo","idade":51,"classif":"Mensalista","gols":3,"assists":0},{"apelido":"Carlinhos","nome":"Carlos Henrique Ferreira","idade":58,"classif":"Mensalista","gols":0,"assists":1},{"apelido":"Dog","nome":"Cleydson J. Paiva dos Santos","idade":67,"classif":"Mensalista","gols":0,"assists":2},{"apelido":"Claudinho","nome":"Claudio Centalvi Junior","idade":55,"classif":"Mensalista","gols":0,"assists":1},{"apelido":"Jair","nome":"Jair","idade":75,"classif":"Mensalista","gols":0,"assists":1},{"apelido":"Alipio","nome":"Alipio N. Lima Sobrinho","idade":71,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Paulão","nome":"Paulo Ricardo Silva","idade":48,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Tuco","nome":"Elber Landrin","idade":52,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Leandro","nome":"Leandro Amaro de Andrade","idade":52,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Naco","nome":"Alexandre Peroni","idade":55,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Luiz Paulo","nome":"Luiz Paulo Capodaglio","idade":56,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Mario Sergio","nome":"Mario Sergio Pedroso de Moraes","idade":56,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Marcelinho","nome":"Marcelo Ghilardi","idade":57,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Laercio","nome":"Laércio Ghirardelli","idade":60,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Marcos Mão de Pau","nome":"Marcos Antonio da Costa","idade":61,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Dr. Rogério","nome":"Rogério Wiezbicki","idade":62,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Zé Pennone","nome":"Jose Eduardo Salvetti Pennone","idade":63,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Carlão","nome":"Carlos Augusto Leme","idade":64,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Paia","nome":"Inildo de Souza Soares","idade":64,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Curitiba","nome":"Fabio Sebastião Curitiba Correa","idade":65,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Jonas","nome":"Jonas de Oliveira Costa","idade":66,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Mauro Celso","nome":"Mauro Celso Novaes","idade":67,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"João","nome":"João Carlos de Araujo","idade":68,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Darcy","nome":"Darcy Gonçalves de Oliveira","idade":69,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Miro","nome":"Francisco Geomiro","idade":69,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Zé Moraes","nome":"José Augusto Moraes","idade":69,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Osmar","nome":"Osmar A de Oliveira Costa","idade":69,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Kimura","nome":"Milton S. Kimura","idade":70,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Milton","nome":"Milton Balliani Filho","idade":72,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Ney","nome":"Sidney Alvares Moreno","idade":72,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Cabeção","nome":"Paulo Eduardo Ribeiro","idade":73,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Carioca","nome":"Roberto Alves de Mello","idade":73,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Ratto","nome":"João Maria Almeida","idade":74,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Caparelli","nome":"José Luiz Caparelli","idade":74,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Rios","nome":"Antonio Carlos Pereira Rios","idade":75,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Finotti","nome":"José Carlos Finotti","idade":75,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Flavio","nome":"Flavio Alves de Lima","idade":76,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Vaguinho","nome":"Vagner Pimenta de Moraes Vaguinho","idade":77,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Vitorinho","nome":"Vitório Tozzi Junior","idade":77,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Zaga","nome":"Luis Gonzaga Godinho","idade":78,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Lélio","nome":"Lélio Góes","idade":79,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Eduardo","nome":"Eduardo Estéfano Filho","idade":80,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Renatinho","nome":"Renato Mendes","idade":81,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Chico Bio","nome":"Francisco Honório Mendes","idade":82,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Alvaro","nome":"Alvaro Pequeno da Silva","idade":83,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Tião","nome":"Sebastião da Silva","idade":84,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Juvenal","nome":"Juvenal Augusto de Moraes","idade":86,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Cobrinha","nome":"Osmar Soares da Silva","idade":88,"classif":"Mensalista","gols":0,"assists":0},{"apelido":"Iaiá","nome":"Annibal P.H de Mello","idade":95,"classif":"Corneta","gols":0,"assists":0},{"apelido":"Alexandre","nome":"Alexandre Goleiro","idade":46,"classif":"Mensalista","gols":0,"assists":0}],"atualizadoEm":"2026-11-13"};/*GUS_DATA_END*/
+    let sortState = { col: 'gols', dir: 'desc' };
+    function formatDate(iso){ const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+y; }
+    function ptDate(iso){ const [y,m,d]=iso.split('-'); return d+'/'+m; }
+    function renderStats(){
+      const t = DATA.totais;
+      document.getElementById('stats-cards').innerHTML =
+        '<div class="stat-card"><div class="stat-label">Jogos disputados</div><div class="stat-value">'+t.jogos+'</div><div class="stat-sub">na temporada 2026</div></div>' +
+        '<div class="stat-card red"><div class="stat-label">Gols marcados</div><div class="stat-value">'+t.gols+'</div><div class="stat-sub">no total da temporada</div></div>' +
+        '<div class="stat-card red"><div class="stat-label">Média de gols</div><div class="stat-value">'+t.mediaGols+'</div><div class="stat-sub">por partida</div></div>' +
+        '<div class="stat-card"><div class="stat-label">Assistências</div><div class="stat-value">'+t.assists+'</div><div class="stat-sub">média de '+t.mediaAssists+' por jogo</div></div>';
+    }
+    // ============ FILTRO DE PERÍODO DO GRÁFICO ============
+    const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    let evolucaoChart = null;
+    function isoMinusMonths(iso, n){
+      let [y,m,d] = iso.split('-').map(Number);
+      m -= n;
+      while (m < 1){ m += 12; y--; }
+      const lastDay = new Date(y, m, 0).getDate();
+      if (d > lastDay) d = lastDay;
+      return y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    }
+    function fmtNum(n){ return n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+    // Períodos "Últimos X meses" contam a partir do último jogo registrado
+    function filterTimeline(f){
+      const tl = DATA.timeline;
+      if (!tl.length || f.type === 'all') return tl;
+      if (f.type === 'last'){
+        const start = isoMinusMonths(tl[tl.length-1].date, f.months);
+        return tl.filter(t => t.date > start);
+      }
+      if (f.type === 'month') return tl.filter(t => t.date.substring(0,7) === f.value);
+      if (f.type === 'year') return tl.filter(t => t.date.substring(0,4) === f.value);
+      if (f.type === 'custom') return tl.filter(t => (!f.from || t.date >= f.from) && (!f.to || t.date <= f.to));
+      return tl;
+    }
+    function renderPeriodSummary(tl){
+      const el = document.getElementById('period-summary');
+      if (!tl.length){ el.innerHTML = '<span>Nenhum jogo encontrado no período escolhido</span>'; return; }
+      const g = tl.reduce((s,t) => s + t.gols, 0), a = tl.reduce((s,t) => s + t.assists, 0), n = tl.length;
+      el.innerHTML =
+        '<span><b>' + formatDate(tl[0].date) + '</b> a <b>' + formatDate(tl[n-1].date) + '</b></span>' +
+        '<span><b>' + n + '</b> ' + (n === 1 ? 'jogo' : 'jogos') + '</span>' +
+        '<span><b>' + g + '</b> gols</span>' +
+        '<span><b>' + a + '</b> assistências</span>' +
+        '<span>média de <b>' + fmtNum(g/n) + '</b> gols por jogo</span>';
+    }
+    function updateEvolucaoChart(f){
+      const tl = filterTimeline(f);
+      renderPeriodSummary(tl);
+      document.getElementById('chart-empty').style.display = tl.length ? 'none' : 'flex';
+      if (!evolucaoChart) return;
+      evolucaoChart.data.labels = tl.map(t => ptDate(t.date));
+      evolucaoChart.data.datasets[0].data = tl.map(t => t.gols);
+      evolucaoChart.data.datasets[1].data = tl.map(t => t.assists);
+      evolucaoChart.update();
+    }
+    function setupPeriodFilter(){
+      const tl = DATA.timeline;
+      const chips = document.querySelectorAll('.period-chip');
+      const sel = document.getElementById('period-select');
+      const custom = document.getElementById('period-custom');
+      const from = document.getElementById('period-from');
+      const to = document.getElementById('period-to');
+      const months = [...new Set(tl.map(t => t.date.substring(0,7)))].sort().reverse();
+      const years = [...new Set(tl.map(t => t.date.substring(0,4)))].sort().reverse();
+      sel.innerHTML = '<option value="">Mês ou ano…</option>' +
+        '<optgroup label="Ano">' + years.map(y => '<option value="y:' + y + '">' + y + '</option>').join('') + '</optgroup>' +
+        '<optgroup label="Mês">' + months.map(m => { const [y,mm] = m.split('-'); return '<option value="m:' + m + '">' + MESES[Number(mm)-1] + '/' + y + '</option>'; }).join('') + '</optgroup>';
+      if (tl.length){ from.min = to.min = tl[0].date; from.max = to.max = tl[tl.length-1].date; }
+      function setActiveChip(period){ chips.forEach(c => c.classList.toggle('active', c.dataset.period === period)); }
+      function applyCustom(){ updateEvolucaoChart({type:'custom', from: from.value, to: to.value}); }
+      chips.forEach(c => c.addEventListener('click', () => {
+        const p = c.dataset.period;
+        setActiveChip(p);
+        sel.value = '';
+        sel.classList.remove('active');
+        if (p === 'custom'){
+          custom.classList.add('open');
+          if (!from.value && tl.length) from.value = tl[0].date;
+          if (!to.value && tl.length) to.value = tl[tl.length-1].date;
+          applyCustom();
+          return;
+        }
+        custom.classList.remove('open');
+        updateEvolucaoChart(p === 'all' ? {type:'all'} : {type:'last', months: Number(p)});
+      }));
+      sel.addEventListener('change', () => {
+        const v = sel.value;
+        custom.classList.remove('open');
+        if (!v){ setActiveChip('all'); sel.classList.remove('active'); updateEvolucaoChart({type:'all'}); return; }
+        setActiveChip(null);
+        sel.classList.add('active');
+        updateEvolucaoChart(v.startsWith('y:') ? {type:'year', value: v.slice(2)} : {type:'month', value: v.slice(2)});
+      });
+      from.addEventListener('change', applyCustom);
+      to.addEventListener('change', applyCustom);
+      updateEvolucaoChart({type:'all'});
+    }
+    function renderEvolucaoChart(){
+      const ctx = document.getElementById('evolucaoChart').getContext('2d');
+      if (window.ChartDataLabels) Chart.register(window.ChartDataLabels);
+      evolucaoChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: DATA.timeline.map(t => ptDate(t.date)),
+          datasets: [
+            { label:'Gols', data:DATA.timeline.map(t=>t.gols), borderColor:'#DC2626', backgroundColor:'rgba(220,38,38,.1)', borderWidth:3, tension:.35, fill:true, pointRadius:4, pointBackgroundColor:'#DC2626', pointBorderColor:'#fff', pointBorderWidth:2 },
+            { label:'Assistências', data:DATA.timeline.map(t=>t.assists), borderColor:'#1E40AF', backgroundColor:'rgba(30,64,175,.1)', borderWidth:3, tension:.35, fill:true, pointRadius:4, pointBackgroundColor:'#1E40AF', pointBorderColor:'#fff', pointBorderWidth:2 }
+          ]
+        },
+        options: {
+          responsive:true, maintainAspectRatio:false,
+          plugins: {
+            legend:{ position:'bottom', labels:{ font:{ weight:'bold', size:13 }, padding:16 } },
+            tooltip:{ backgroundColor:'#1E3A8A', titleFont:{weight:'bold'}, padding:12, cornerRadius:8 },
+            datalabels: {
+              display: function(ctx){
+                // Hide on mobile (narrow viewports), unless the filtered period has few games
+                return window.innerWidth >= 768 || ctx.chart.data.labels.length <= 12;
+              },
+              align: function(ctx){ return ctx.datasetIndex === 0 ? 'top' : 'bottom'; },
+              anchor: function(ctx){ return ctx.datasetIndex === 0 ? 'end' : 'start'; },
+              color: function(ctx){ return ctx.datasetIndex === 0 ? '#B91C1C' : '#1E3A8A'; },
+              font: { weight: 'bold', size: 11 },
+              backgroundColor: 'rgba(255,255,255,0.85)',
+              borderRadius: 4,
+              padding: { top: 2, bottom: 2, left: 5, right: 5 },
+              formatter: function(value){ return value > 0 ? value : ''; }
+            }
+          },
+          scales: { y:{ beginAtZero:true, grid:{color:'#F3F4F6'} }, x:{ grid:{display:false} } }
+        }
+      });
+    }
+    // Jogadores que não competem mais: saem do Top 5 e dos rankings +60/-60,
+    // mas os gols e assistências deles continuam nos totais e na tabela de jogadores.
+    // Para tirar mais alguém, inclua o apelido (ou nome) na lista.
+    const FORA_DO_RANKING = ['Waguinho'];
+    const noRanking = p => !FORA_DO_RANKING.includes(p.apelido) && !FORA_DO_RANKING.includes(p.nome);
+    function renderTop5(){
+      const all = DATA.players.filter(p => (p.gols>0 || p.assists>0) && noRanking(p));
+      const tg = [...all].sort((a,b) => b.gols - a.gols || b.assists - a.assists).slice(0,5);
+      const ta = [...all].sort((a,b) => b.assists - a.assists || b.gols - a.gols).slice(0,5);
+      document.getElementById('top-gols').innerHTML = tg.map((p,i) =>
+        '<li class="podium-item rank-'+(i+1)+'"><span class="podium-rank">'+(i+1)+'</span><span class="podium-name">'+p.apelido+'<small>'+p.idade+' anos</small></span><span class="podium-value">'+p.gols+'</span></li>'
+      ).join('');
+      document.getElementById('top-assists').innerHTML = ta.map((p,i) =>
+        '<li class="podium-item rank-'+(i+1)+'"><span class="podium-rank">'+(i+1)+'</span><span class="podium-name">'+p.apelido+'<small>'+p.idade+' anos</small></span><span class="podium-value">'+p.assists+'</span></li>'
+      ).join('');
+    }
+    function renderRankings(){
+      const m65 = DATA.players.filter(p => p.idade >= 60 && noRanking(p));
+      const me65 = DATA.players.filter(p => p.idade < 60 && noRanking(p));
+      renderRankTable('rank-mais60-gols', m65, 'gols');
+      renderRankTable('rank-mais60-assists', m65, 'assists');
+      renderRankTable('rank-menos60-gols', me65, 'gols');
+      renderRankTable('rank-menos60-assists', me65, 'assists');
+    }
+    function renderRankTable(elemId, players, metric){
+      const tie = metric === 'gols' ? 'assists' : 'gols';
+      const ranked = players.filter(p => p[metric] > 0).sort((a,b) => b[metric] - a[metric] || b[tie] - a[tie]);
+      const el = document.getElementById(elemId);
+      if (ranked.length === 0) { el.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#6B7280;padding:1.5rem">Sem registros nesta categoria</td></tr>'; return; }
+      el.innerHTML = ranked.map((p,i) =>
+        '<tr class="top-'+(i+1 <= 3 ? i+1 : '')+'"><td>'+(i+1)+'</td><td>'+p.apelido+'<div class="rank-age">'+p.idade+' anos</div></td><td>'+p[metric]+'</td></tr>'
+      ).join('');
+    }
+    function renderFullTable(){
+      const filter = document.getElementById('filter-input').value.toLowerCase();
+      const cat = document.getElementById('filter-categoria').value;
+      const totalJogos = DATA.totais.jogos || 1;
+      // Cornetas não jogam: ficam fora da tabela de jogadores
+      let players = DATA.players.filter(p => (p.classif || '').toLowerCase() !== 'corneta').map(p => Object.assign({}, p, {
+        mediaGols: Math.round((p.gols / totalJogos) * 100) / 100,
+        mediaAssists: Math.round((p.assists / totalJogos) * 100) / 100
+      }));
+      if (filter) players = players.filter(p => p.apelido.toLowerCase().includes(filter));
+      if (cat === 'mais65') players = players.filter(p => p.idade >= 60);
+      if (cat === 'menos65') players = players.filter(p => p.idade < 60);
+      const col = sortState.col, dir = sortState.dir;
+      players.sort((a,b) => {
+        const va=a[col], vb=b[col];
+        if (typeof va === 'string') return dir==='asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        return dir==='asc' ? va - vb : vb - va;
+      });
+      const tbody = document.querySelector('#full-table tbody');
+      if (players.length === 0) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#6B7280;padding:1.5rem">Nenhum jogador encontrado</td></tr>'; return; }
+      tbody.innerHTML = players.map(p =>
+        '<tr><td>'+p.apelido+'</td><td>'+p.idade+'</td><td>'+p.gols+'</td><td>'+p.mediaGols.toFixed(2)+'</td><td>'+p.assists+'</td><td>'+p.mediaAssists.toFixed(2)+'</td><td><span class="tag tag-'+(p.classif||'').toLowerCase()+'">'+(p.classif||'-')+'</span></td></tr>'
+      ).join('');
+      document.querySelectorAll('#full-table th').forEach(th => {
+        th.classList.remove('sorted-asc','sorted-desc');
+        if (th.dataset.sort === col) th.classList.add(dir==='asc' ? 'sorted-asc' : 'sorted-desc');
+      });
+    }
+    function setupTabs(){
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(t => t.classList.remove('tab-active'));
+          tab.classList.add('tab-active');
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          document.getElementById('tab-' + tab.dataset.tab).classList.remove('hidden');
+        });
+      });
+    }
+    function setupFilters(){
+      document.getElementById('filter-input').addEventListener('input', renderFullTable);
+      document.getElementById('filter-categoria').addEventListener('change', renderFullTable);
+    }
+    function setupSorting(){
+      document.querySelectorAll('#full-table th').forEach(th => {
+        th.addEventListener('click', () => {
+          const col = th.dataset.sort;
+          if (sortState.col === col) sortState.dir = sortState.dir==='asc' ? 'desc' : 'asc';
+          else { sortState.col = col; sortState.dir = ['apelido','classif'].includes(col) ? 'asc' : 'desc'; }
+          renderFullTable();
+        });
+      });
+    }
+    renderStats();
+    renderEvolucaoChart();
+    setupPeriodFilter();
+    renderTop5();
+    renderRankings();
+    renderFullTable();
+    setupTabs();
+    setupFilters();
+    setupSorting();
+    document.getElementById('updated-at').textContent = formatDate(DATA.atualizadoEm);
+  
+    // ============ ADMIN (login + upload) ============
+    (function(){
+      // ----- Login system -----
+      // ===== CONFIGURAÇÃO DO DONO DO SITE (trocar ao instalar) =====
+      // GITHUB_REPO: repositório onde está este index.html, no formato usuario/repositorio.
+      // VALID_USER / VALID_PASS: login da página Admin. Ficam visíveis no código-fonte,
+      //   então só escondem a tela. A proteção de verdade é o token do GitHub, que cada
+      //   coordenador cola no Admin e fica salvo só no navegador dele. Nunca coloque o token aqui.
+      const GITHUB_REPO = 'wmrcamargo70-star/site-gus';
+      const VALID_USER = 'wmrcgus';
+      const VALID_PASS = '810735';
+
+      const loginCard = document.getElementById('login-card');
+      const adminContent = document.getElementById('admin-content');
+      const userInput = document.getElementById('login-user');
+      const passInput = document.getElementById('login-pass');
+      const loginBtn = document.getElementById('login-btn');
+      const errorEl = document.getElementById('login-error');
+      const loggedUser = document.getElementById('logged-user');
+      const logoutBtn = document.getElementById('logout-btn');
+
+      function showLogged(user){
+        loginCard.style.display = 'none';
+        adminContent.style.display = 'block';
+        loggedUser.textContent = user;
+      }
+      function showLogin(){
+        loginCard.style.display = 'block';
+        adminContent.style.display = 'none';
+        passInput.value = '';
+        errorEl.style.display = 'none';
+      }
+      function tryLogin(){
+        const u = userInput.value.trim();
+        const p = passInput.value;
+        if (u === VALID_USER && p === VALID_PASS){
+          sessionStorage.setItem('gus_admin_user', u);
+          errorEl.style.display = 'none';
+          showLogged(u);
+        } else {
+          errorEl.textContent = 'Usuário ou senha incorretos';
+          errorEl.style.display = 'block';
+          passInput.value = '';
+          passInput.focus();
+        }
+      }
+      loginBtn.addEventListener('click', tryLogin);
+      passInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+      userInput.addEventListener('keydown', e => { if (e.key === 'Enter') passInput.focus(); });
+      logoutBtn.addEventListener('click', () => {
+        sessionStorage.removeItem('gus_admin_user');
+        sessionStorage.removeItem('gus_pass');
+        showLogin();
+      });
+      // Auto-login if session active
+      const savedUser = sessionStorage.getItem('gus_admin_user');
+      if (savedUser === VALID_USER) showLogged(savedUser);
+
+      // ----- Upload (only relevant after login) -----
+      const fileInput = document.getElementById('upload-file');
+      const tokenInput = document.getElementById('upload-token');
+      const dropzone = document.getElementById('upload-dropzone');
+      const publishBtn = document.getElementById('upload-publish');
+      const resetBtn = document.getElementById('upload-reset');
+      const msgEl = document.getElementById('upload-msg');
+      const previewEl = document.getElementById('upload-preview');
+      let newData = null;
+      let fileName = '';
+
+      function msg(text, type){
+        msgEl.innerHTML = '<div class="upload-msg upload-msg-'+type+'">'+text+'</div>';
+      }
+
+      // Restore saved token
+      const saved = localStorage.getItem('gus_pat');
+      if (saved) tokenInput.value = saved;
+
+      // Drag & drop on dropzone
+      // Allow re-selecting the same file
+      dropzone.addEventListener('click', () => { fileInput.value = ''; });
+      dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.style.background = '#EFF6FF'; });
+      dropzone.addEventListener('dragleave', () => { dropzone.style.background = ''; });
+      dropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropzone.style.background = '';
+        if (e.dataTransfer.files.length){
+          fileInput.files = e.dataTransfer.files;
+          fileInput.dispatchEvent(new Event('change'));
+        }
+      });
+
+      // Reset
+      resetBtn.addEventListener('click', () => {
+        fileInput.value = '';
+        newData = null;
+        fileName = '';
+        publishBtn.disabled = true;
+        previewEl.innerHTML = '';
+        msgEl.innerHTML = '';
+        dropzone.classList.remove('has-file');
+        dropzone.querySelector('.upload-dropzone-text').textContent = 'Clique para escolher ou arraste a planilha aqui';
+      });
+
+      // Process file
+      fileInput.addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        fileName = file.name;
+        publishBtn.disabled = true;
+        previewEl.innerHTML = '';
+        dropzone.classList.add('has-file');
+        dropzone.querySelector('.upload-dropzone-text').textContent = '✓ ' + file.name;
+        try {
+          msg('Carregando biblioteca para ler Excel...', 'info');
+          if (typeof XLSX === 'undefined'){
+            await new Promise((res, rej) => {
+              const s = document.createElement('script');
+              s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+              s.onload = res; s.onerror = () => rej(new Error('Não consegui baixar SheetJS'));
+              document.head.appendChild(s);
+            });
+          }
+          msg('Processando a planilha...', 'info');
+          const buf = await file.arrayBuffer();
+          newData = processWorkbook(buf);
+          showPreview(newData);
+          publishBtn.disabled = false;
+          msg('Planilha processada! Confira a prévia abaixo e clique em Publicar para atualizar o site oficial.', 'success');
+        } catch (err) {
+          msg('Erro ao processar: ' + err.message, 'error');
+          console.error(err);
+        }
+      });
+
+      function processWorkbook(buf){
+        const wb = XLSX.read(buf, {cellFormula: true, cellDates: true});
+        const EXCLUDE = ['Tulio', 'Claudio', 'Gol Contra', 'Devas'];
+
+        const wsIdade = wb.Sheets['Idade'];
+        if (!wsIdade) throw new Error('Aba "Idade" nao encontrada na planilha');
+        const idadeRows = XLSX.utils.sheet_to_json(wsIdade, {header: 1, blankrows: false, defval: null});
+        const apelidoInfo = {};
+        for (const row of idadeRows){
+          const num = row[0], nome = row[1], apelido = row[3], idade = row[6], classif = row[7];
+          if (typeof num !== 'number' || !apelido || typeof apelido !== 'string') continue;
+          apelidoInfo[apelido.trim()] = {
+            apelido: apelido.trim(),
+            nome: typeof nome === 'string' ? nome.trim() : apelido.trim(),
+            idade: typeof idade === 'number' ? Math.floor(idade) : null,
+            classif: classif || 'Mensalista'
+          };
+        }
+
+        const wsBase = wb.Sheets['Base'];
+        if (!wsBase) throw new Error('Aba "Base" nao encontrada. Use a planilha V03 ou mais recente.');
+        const baseRows = XLSX.utils.sheet_to_json(wsBase, {header: 1, blankrows: false, defval: null});
+
+        const timelineMap = {};
+        const playerGols = {};
+        const playerAssists = {};
+        for (let i = 1; i < baseRows.length; i++){
+          const r = baseRows[i];
+          if (!(r[0] instanceof Date)) continue;
+          const date = r[0].toISOString().substring(0, 10);
+          const name = typeof r[1] === 'string' ? r[1].trim() : null;
+          if (!name) continue;
+          const gols = typeof r[3] === 'number' ? r[3] : 0;
+          const assists = typeof r[4] === 'number' ? r[4] : 0;
+          if (!timelineMap[date]) timelineMap[date] = {gols: 0, assists: 0};
+          if (gols > 0){
+            playerGols[name] = (playerGols[name] || 0) + gols;
+            timelineMap[date].gols += gols;
+          }
+          if (assists > 0){
+            playerAssists[name] = (playerAssists[name] || 0) + assists;
+            timelineMap[date].assists += assists;
+          }
+        }
+
+        const timeline = Object.entries(timelineMap)
+          .map(([date, v]) => ({date, gols: v.gols, assists: v.assists}))
+          .filter(t => t.gols > 0 || t.assists > 0)
+          .sort((a,b) => a.date.localeCompare(b.date));
+
+        const allApelidos = new Set([...Object.keys(playerGols), ...Object.keys(playerAssists)]);
+        const players = [];
+        for (const apelido of allApelidos){
+          if (EXCLUDE.indexOf(apelido) !== -1) continue;
+          const info = apelidoInfo[apelido];
+          if (!info || info.idade == null) continue;
+          players.push(Object.assign({}, info, {
+            gols: playerGols[apelido] || 0,
+            assists: playerAssists[apelido] || 0
+          }));
+        }
+        for (const apelido in apelidoInfo){
+          if (EXCLUDE.indexOf(apelido) !== -1) continue;
+          if (apelidoInfo[apelido].idade == null) continue;
+          if (!allApelidos.has(apelido)){
+            players.push(Object.assign({}, apelidoInfo[apelido], {gols: 0, assists: 0}));
+          }
+        }
+
+        const totalGols = Object.values(playerGols).reduce((a,b) => a+b, 0);
+        const totalAst = Object.values(playerAssists).reduce((a,b) => a+b, 0);
+        const jogos = timeline.length;
+        const today = new Date().toISOString().substring(0, 10);
+
+        return {
+          totais: {
+            jogos,
+            gols: totalGols,
+            assists: totalAst,
+            mediaGols: jogos > 0 ? Math.round(totalGols/jogos * 100)/100 : 0,
+            mediaAssists: jogos > 0 ? Math.round(totalAst/jogos * 100)/100 : 0
+          },
+          timeline,
+          players,
+          atualizadoEm: today
+        };
+      }
+
+      function diff(a, b){
+        if (a === b) return '<span class="diff-same">'+b+'</span>';
+        return '<span class="diff-old">'+a+'</span><span class="diff-new">'+b+'</span>';
+      }
+
+      function showPreview(d){
+        const o = DATA;
+        const topG = d.players.filter(p => p.gols > 0).sort((a,b) => b.gols - a.gols).slice(0, 3)
+          .map(p => p.apelido + ' (' + p.gols + ')').join(', ') || '—';
+        const topA = d.players.filter(p => p.assists > 0).sort((a,b) => b.assists - a.assists).slice(0, 3)
+          .map(p => p.apelido + ' (' + p.assists + ')').join(', ') || '—';
+        previewEl.innerHTML =
+          '<div class="upload-preview">' +
+          '<h4>Prévia das mudanças</h4>' +
+          '<div class="row"><span class="label">Jogos disputados</span><span class="val">'+diff(o.totais.jogos, d.totais.jogos)+'</span></div>' +
+          '<div class="row"><span class="label">Gols marcados</span><span class="val">'+diff(o.totais.gols, d.totais.gols)+'</span></div>' +
+          '<div class="row"><span class="label">Assistências</span><span class="val">'+diff(o.totais.assists, d.totais.assists)+'</span></div>' +
+          '<div class="row"><span class="label">Média gols/jogo</span><span class="val">'+diff(o.totais.mediaGols, d.totais.mediaGols)+'</span></div>' +
+          '<div class="row"><span class="label">Top 3 artilheiros</span><span class="val diff-new">'+topG+'</span></div>' +
+          '<div class="row"><span class="label">Top 3 assistências</span><span class="val diff-new">'+topA+'</span></div>' +
+          '<div class="row"><span class="label">Data da atualização</span><span class="val diff-new">'+d.atualizadoEm+'</span></div>' +
+          '</div>';
+      }
+
+      publishBtn.addEventListener('click', async () => {
+        const token = tokenInput.value.trim();
+        if (!token){ msg('Cole seu token GitHub primeiro (apenas coordenadores podem publicar)', 'error'); return; }
+        if (!newData){ msg('Escolha a planilha primeiro', 'error'); return; }
+        localStorage.setItem('gus_pat', token);
+        publishBtn.disabled = true;
+        msg('Publicando no GitHub...', 'info');
+        try {
+          const repo = GITHUB_REPO;
+          if (repo.indexOf('SEU-USUARIO') === 0) throw new Error('Configure GITHUB_REPO no código antes de publicar (veja o dossiê).');
+          const path = 'index.html';
+          const apiBase = 'https://api.github.com/repos/' + repo + '/contents/' + path;
+          const headers = {
+            'Authorization': 'token ' + token,
+            'Accept': 'application/vnd.github.v3+json'
+          };
+          const getRes = await fetch(apiBase, {headers});
+          if (!getRes.ok){
+            if (getRes.status === 401) throw new Error('Token inválido ou expirado. Crie um novo no GitHub.');
+            throw new Error('Não consegui ler o arquivo (status '+getRes.status+')');
+          }
+          const fileInfo = await getRes.json();
+
+          const b64 = fileInfo.content.replace(/\s/g, '');
+          const bin = atob(b64);
+          const bytes = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          const current = new TextDecoder('utf-8').decode(bytes);
+
+          const newJson = JSON.stringify(newData);
+          const updated = current.replace(/\/\*GUS_DATA_START\*\/[\s\S]*?\/\*GUS_DATA_END\*\//, '/*GUS_DATA_START*/const DATA = ' + newJson + ';/*GUS_DATA_END*/');
+          if (updated === current) throw new Error('Não achei "const DATA" no arquivo do GitHub');
+
+          const enc = new TextEncoder().encode(updated);
+          let binStr = '';
+          for (let i = 0; i < enc.length; i++) binStr += String.fromCharCode(enc[i]);
+          const newB64 = btoa(binStr);
+
+          const putRes = await fetch(apiBase, {
+            method: 'PUT',
+            headers: Object.assign({}, headers, {'Content-Type': 'application/json'}),
+            body: JSON.stringify({
+              message: 'Atualiza dados via web: ' + newData.totais.jogos + ' jogos, ' + newData.totais.gols + ' gols, ' + newData.totais.assists + ' assists',
+              content: newB64,
+              sha: fileInfo.sha
+            })
+          });
+          if (!putRes.ok){
+            const errText = await putRes.text();
+            throw new Error('Commit falhou ('+putRes.status+'): ' + errText.substring(0, 200));
+          }
+          msg('✓ Publicado! O site oficial vai atualizar em ~30 segundos. Aguarde 1 minuto e dê Ctrl+F5 para confirmar.', 'success');
+        } catch (err) {
+          msg('Erro: ' + err.message, 'error');
+          publishBtn.disabled = false;
+          console.error(err);
+        }
+      });
+    })();
+
+  </script>
+</body>
+</html>
