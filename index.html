@@ -10,6 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
   <style>
     :root{--gus-red:#DC2626;--gus-red-dark:#B91C1C;--gus-blue:#1E40AF;--gus-blue-dark:#1E3A8A;--gus-white:#FFFFFF;--gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-500:#6B7280;--gray-700:#374151;--gray-900:#111827;--shadow-md:0 4px 6px -1px rgba(0,0,0,.08),0 2px 4px -2px rgba(0,0,0,.04);--shadow-lg:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.05);--radius:12px}
     *{box-sizing:border-box;margin:0;padding:0}
@@ -219,6 +220,30 @@
     .logged-bar .logout-btn{background:transparent;color:#065F46;border:1px solid #065F46;padding:.3rem .75rem;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit}
     .logged-bar .logout-btn:hover{background:#065F46;color:#fff}
 
+    /* Cadastro de jogadores (Admin) */
+    .cad-card{margin-top:2rem}
+    .cad-toolbar{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+    .cad-form{background:var(--gray-50);border:1px solid var(--gray-200);border-radius:10px;padding:1.25rem;margin-top:1.25rem}
+    .cad-form h4{color:var(--gus-blue-dark);font-size:.95rem;margin-bottom:1rem;text-transform:uppercase;letter-spacing:.5px}
+    .cad-photo-row{display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap}
+    .cad-photo-box{width:96px;height:96px;border-radius:50%;background:var(--gray-200);border:3px solid var(--gus-blue);overflow:hidden;flex:0 0 96px;display:flex;align-items:center;justify-content:center;color:var(--gray-500);font-size:.75rem;text-align:center}
+    .cad-photo-box img{width:100%;height:100%;object-fit:cover}
+    .cad-grid{display:grid;grid-template-columns:1fr 1fr;gap:.75rem 1rem}
+    .cad-full{grid-column:1/-1}
+    .cad-field label,.cad-label{display:block;font-size:.78rem;font-weight:700;color:var(--gray-700);margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.5px}
+    .cad-field input,.cad-field select{width:100%;padding:.65rem .85rem;border:2px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:.95rem;background:var(--gus-white);color:var(--gray-900)}
+    .cad-field input:focus,.cad-field select:focus{outline:none;border-color:var(--gus-blue)}
+    .cad-list{margin-top:1.25rem;display:flex;flex-direction:column;gap:.5rem}
+    .cad-item{display:flex;gap:.85rem;align-items:center;padding:.75rem;border:1px solid var(--gray-200);border-radius:10px;background:var(--gus-white)}
+    .cad-thumb{flex:0 0 52px;width:52px;height:52px;border-radius:50%;background:var(--gus-blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.2rem;overflow:hidden}
+    .cad-thumb img{width:100%;height:100%;object-fit:cover}
+    .cad-info{flex:1;min-width:0;font-size:.9rem;line-height:1.45;overflow-wrap:anywhere}
+    .cad-sub{color:var(--gray-500);font-size:.82rem}
+    .cad-actions{display:flex;flex-direction:column;gap:.35rem}
+    .cad-mini{cursor:pointer;border:1px solid var(--gus-blue);background:transparent;color:var(--gus-blue);padding:.3rem .7rem;border-radius:6px;font-size:.78rem;font-weight:700;font-family:inherit}
+    .cad-mini.cad-del{border-color:var(--gus-red);color:var(--gus-red)}
+    @media(max-width:600px){.cad-grid{grid-template-columns:1fr}}
+
   
     .rank-group{margin-bottom:2.5rem}
     .rank-group:last-child{margin-bottom:0}
@@ -363,9 +388,9 @@
       </div>
       <div class="login-card" id="login-card">
         <h3>Acesso restrito</h3>
-        <p class="lead">Entre com suas credenciais para gerenciar os dados.</p>
-        <label for="login-user">Usuário</label>
-        <input type="text" id="login-user" autocomplete="username" />
+        <p class="lead">Entre com seu e-mail e senha de administrador.</p>
+        <label for="login-user">E-mail</label>
+        <input type="email" id="login-user" autocomplete="username" />
         <label for="login-pass">Senha</label>
         <input type="password" id="login-pass" autocomplete="current-password" />
         <button id="login-btn">Entrar</button>
@@ -401,6 +426,41 @@
           <button class="upload-btn upload-btn-reset" id="upload-reset">Limpar</button>
         </div>
       </div>
+
+        <div class="upload-card cad-card" id="cad-card">
+          <h3>Cadastro de jogadores</h3>
+          <p class="lead">Os dados ficam no banco de dados protegido do G.U.S.: só administradores conseguem ver. Nada daqui aparece no site público.</p>
+          <div class="cad-toolbar">
+            <button type="button" class="upload-btn upload-btn-reset" id="cad-load">Atualizar lista</button>
+            <button type="button" class="upload-btn upload-btn-publish" id="cad-new">+ Novo jogador</button>
+          </div>
+          <div id="cad-msg"></div>
+          <form id="cad-form" class="cad-form" style="display:none" autocomplete="off" novalidate>
+            <h4 id="cad-form-title">Novo jogador</h4>
+            <div class="cad-photo-row">
+              <div class="cad-photo-box" id="cad-photo-box">sem foto</div>
+              <div>
+                <label class="cad-label" for="cad-foto">Foto</label>
+                <input type="file" id="cad-foto" accept="image/jpeg,image/png,image/webp" />
+                <div class="upload-token-hint">JPG, PNG ou WEBP. A foto é reduzida automaticamente antes de salvar.</div>
+              </div>
+            </div>
+            <div class="cad-grid">
+              <div class="cad-field cad-full"><label for="cad-nome">Nome completo *</label><input id="cad-nome" maxlength="120" /></div>
+              <div class="cad-field"><label for="cad-apelido">Apelido *</label><input id="cad-apelido" maxlength="40" /></div>
+              <div class="cad-field"><label for="cad-nasc">Data de nascimento *</label><input type="date" id="cad-nasc" min="1920-01-01" /></div>
+              <div class="cad-field"><label for="cad-tel">Telefone</label><input type="tel" id="cad-tel" placeholder="(11) 99999-9999" maxlength="15" /></div>
+              <div class="cad-field"><label for="cad-email">E-mail</label><input type="email" id="cad-email" maxlength="120" /></div>
+              <div class="cad-field"><label for="cad-pos1">Posição preferida 1 *</label><select id="cad-pos1"></select></div>
+              <div class="cad-field"><label for="cad-pos2">Posição preferida 2</label><select id="cad-pos2"></select></div>
+            </div>
+            <div class="upload-actions">
+              <button type="submit" class="upload-btn upload-btn-publish" id="cad-save">Salvar cadastro</button>
+              <button type="button" class="upload-btn upload-btn-reset" id="cad-cancel">Cancelar</button>
+            </div>
+          </form>
+          <div id="cad-list" class="cad-list"></div>
+        </div>
       </div>
     </div>
   </section>
@@ -644,12 +704,17 @@
       // ----- Login system -----
       // ===== CONFIGURAÇÃO DO DONO DO SITE (trocar ao instalar) =====
       // GITHUB_REPO: repositório onde está este index.html, no formato usuario/repositorio.
-      // VALID_USER / VALID_PASS: login da página Admin. Ficam visíveis no código-fonte,
-      //   então só escondem a tela. A proteção de verdade é o token do GitHub, que cada
-      //   coordenador cola no Admin e fica salvo só no navegador dele. Nunca coloque o token aqui.
+      //   Publicar a planilha exige o token do GitHub, que cada coordenador cola no Admin e
+      //   fica salvo só no navegador dele. Nunca coloque o token aqui.
+      // SUPABASE: login do Admin (e-mail + senha) e cadastro de jogadores. A chave anon/publishable
+      //   é pública por natureza; quem protege os dados são as regras (RLS) do banco.
+      //   NUNCA coloque aqui a chave service_role / secret.
       const GITHUB_REPO = 'wmrcamargo70-star/site-gus';
-      const VALID_USER = 'wmrcgus';
-      const VALID_PASS = '810735';
+      const SUPABASE_URL = 'https://shbchuwojfezwurboyie.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_p_kBPt3iK7hHUEHSeMKryA_y0OPEt-f';
+      const sb = (window.supabase && SUPABASE_ANON_KEY.indexOf('COLE-AQUI') !== 0)
+        ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+        : null;
 
       const loginCard = document.getElementById('login-card');
       const adminContent = document.getElementById('admin-content');
@@ -664,6 +729,7 @@
         loginCard.style.display = 'none';
         adminContent.style.display = 'block';
         loggedUser.textContent = user;
+        cadLoadSeguro();
       }
       function showLogin(){
         loginCard.style.display = 'block';
@@ -671,31 +737,47 @@
         passInput.value = '';
         errorEl.style.display = 'none';
       }
-      function tryLogin(){
-        const u = userInput.value.trim();
-        const p = passInput.value;
-        if (u === VALID_USER && p === VALID_PASS){
-          sessionStorage.setItem('gus_admin_user', u);
+      function loginErro(t){
+        errorEl.textContent = t;
+        errorEl.style.display = 'block';
+      }
+      async function ehAdmin(){
+        const { data, error } = await sb.rpc('eh_admin');
+        return !error && data === true;
+      }
+      async function tryLogin(){
+        const email = userInput.value.trim().toLowerCase();
+        const senha = passInput.value;
+        if (!sb){ loginErro('Login indisponível: banco de dados não configurado.'); return; }
+        if (!email || !senha){ loginErro('Preencha e-mail e senha.'); return; }
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Entrando...';
+        try {
+          const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+          if (error) throw new Error(/invalid login/i.test(error.message) ? 'E-mail ou senha incorretos' : error.message);
+          if (!(await ehAdmin())){
+            await sb.auth.signOut();
+            throw new Error('Este usuário não é administrador do site.');
+          }
           errorEl.style.display = 'none';
-          showLogged(u);
-        } else {
-          errorEl.textContent = 'Usuário ou senha incorretos';
-          errorEl.style.display = 'block';
+          passInput.value = '';
+          showLogged(data.user.email);
+        } catch (err){
+          loginErro(err.message);
           passInput.value = '';
           passInput.focus();
+        } finally {
+          loginBtn.disabled = false;
+          loginBtn.textContent = 'Entrar';
         }
       }
       loginBtn.addEventListener('click', tryLogin);
       passInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
       userInput.addEventListener('keydown', e => { if (e.key === 'Enter') passInput.focus(); });
-      logoutBtn.addEventListener('click', () => {
-        sessionStorage.removeItem('gus_admin_user');
-        sessionStorage.removeItem('gus_pass');
+      logoutBtn.addEventListener('click', async () => {
+        if (sb) await sb.auth.signOut();
         showLogin();
       });
-      // Auto-login if session active
-      const savedUser = sessionStorage.getItem('gus_admin_user');
-      if (savedUser === VALID_USER) showLogged(savedUser);
 
       // ----- Upload (only relevant after login) -----
       const fileInput = document.getElementById('upload-file');
@@ -943,6 +1025,224 @@
           console.error(err);
         }
       });
+
+      // ----- Cadastro de jogadores (Supabase) -----
+      // Tabela public.jogadores (+ view jogadores_com_idade) e bucket PRIVADO fotos-jogadores.
+      // Só quem está em public.administradores lê e grava: a regra fica no banco (RLS), não aqui.
+      const BUCKET = 'fotos-jogadores';
+      let POSICOES = ['Goleiro', 'Lateral', 'Zagueiro', 'Meio de campo', 'Atacante'];
+      const $ = id => document.getElementById(id);
+      const cadMsgEl = $('cad-msg'), cadForm = $('cad-form'), cadList = $('cad-list');
+      const cadFoto = $('cad-foto'), cadPhotoBox = $('cad-photo-box'), cadSave = $('cad-save');
+      let jogadores = null;  // lista carregada do banco
+      let editId = null;     // id em edição (null = novo)
+      let fotoBlob = null;   // foto nova escolhida (jpeg reduzido)
+      let fotoUrls = {};     // foto_path -> link temporário
+
+      function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+      function cadMsg(html, type){ cadMsgEl.innerHTML = html ? '<div class="upload-msg upload-msg-'+type+'">'+html+'</div>' : ''; }
+      function novoUuid(){
+        if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+        const b = crypto.getRandomValues(new Uint8Array(16));
+        b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80;
+        const h = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+        return h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+      }
+      function preencherPosicoes(){
+        ['cad-pos1', 'cad-pos2'].forEach((id, i) => {
+          const atual = $(id).value;
+          $(id).innerHTML = '<option value="">' + (i ? '— nenhuma —' : 'Escolha...') + '</option>' +
+            POSICOES.map(p => '<option value="'+esc(p)+'">'+esc(p)+'</option>').join('');
+          $(id).value = atual;
+        });
+      }
+      preencherPosicoes();
+      function traduzErro(error){
+        const m = (error && error.message) || '';
+        if (error && error.code === '23505') return 'Já existe um jogador com este apelido.';
+        if (error && error.code === '23514') return 'Algum dado está fora do formato aceito (confira data, telefone e e-mail).';
+        if (error && (error.code === '42501' || /row-level security|permission denied|unauthorized/i.test(m))) return 'Sem permissão. Saia e entre de novo com um usuário administrador.';
+        if (/jwt|session/i.test(m)) return 'Sua sessão expirou. Saia e entre de novo.';
+        if (/failed to fetch|network/i.test(m)) return 'Sem conexão com o banco. Confira a internet e tente de novo.';
+        return m || 'Erro desconhecido.';
+      }
+
+      async function cadLoad(){
+        if (!sb) throw new Error('Banco de dados não configurado.');
+        cadMsg('Carregando cadastro...', 'info');
+        const pos = await sb.from('posicoes').select('nome').order('ordem');
+        if (!pos.error && pos.data && pos.data.length){ POSICOES = pos.data.map(p => p.nome); preencherPosicoes(); }
+        const { data, error } = await sb.from('jogadores_com_idade').select('*').order('apelido');
+        if (error) throw new Error(traduzErro(error));
+        jogadores = data || [];
+        fotoUrls = {};
+        const paths = jogadores.map(j => j.foto_path).filter(Boolean);
+        if (paths.length){
+          const r = await sb.storage.from(BUCKET).createSignedUrls(paths, 3600);
+          if (!r.error && r.data) r.data.forEach(x => { if (x.signedUrl) fotoUrls[x.path] = x.signedUrl; });
+        }
+        renderCad();
+        cadMsg(jogadores.length + ' jogador(es) cadastrado(s).', 'success');
+      }
+      function cadLoadSeguro(){ cadLoad().catch(err => cadMsg('Erro: ' + esc(err.message), 'error')); }
+
+      function renderCad(){
+        const js = jogadores.slice().sort((a, b) => String(a.apelido).localeCompare(String(b.apelido), 'pt-BR'));
+        if (!js.length){ cadList.innerHTML = '<p class="upload-token-hint">Nenhum jogador cadastrado ainda.</p>'; return; }
+        cadList.innerHTML = js.map(j => {
+          const foto = j.foto_path && fotoUrls[j.foto_path];
+          return '<div class="cad-item">' +
+            '<div class="cad-thumb">' + (foto ? '<img src="'+esc(foto)+'" alt="">' : esc(String(j.apelido || '?').charAt(0).toUpperCase())) + '</div>' +
+            '<div class="cad-info"><strong>'+esc(j.apelido)+'</strong> <span class="cad-sub">'+esc(j.nome_completo)+'</span><br>' +
+              '<span class="cad-sub">'+(j.data_nascimento ? formatDate(j.data_nascimento)+' ('+esc(j.idade)+' anos)' : '')+' · '+esc([j.posicao_1, j.posicao_2].filter(Boolean).join(' / '))+'</span>' +
+              ((j.telefone || j.email) ? '<br><span class="cad-sub">'+esc([j.telefone, j.email].filter(Boolean).join(' · '))+'</span>' : '') +
+            '</div>' +
+            '<div class="cad-actions"><button type="button" class="cad-mini" data-edit="'+esc(j.id)+'">Editar</button>' +
+            '<button type="button" class="cad-mini cad-del" data-del="'+esc(j.id)+'">Excluir</button></div>' +
+          '</div>';
+        }).join('');
+      }
+      function mostrarFoto(src){ cadPhotoBox.innerHTML = src ? '<img src="'+esc(src)+'" alt="">' : 'sem foto'; }
+
+      function abrirForm(j){
+        editId = j ? j.id : null;
+        fotoBlob = null;
+        cadFoto.value = '';
+        $('cad-form-title').textContent = j ? 'Editar ' + j.apelido : 'Novo jogador';
+        $('cad-nome').value = j ? j.nome_completo || '' : '';
+        $('cad-apelido').value = j ? j.apelido || '' : '';
+        $('cad-nasc').value = j ? j.data_nascimento || '' : '';
+        $('cad-tel').value = j ? j.telefone || '' : '';
+        $('cad-email').value = j ? j.email || '' : '';
+        $('cad-pos1').value = j ? j.posicao_1 || '' : '';
+        $('cad-pos2').value = j ? j.posicao_2 || '' : '';
+        $('cad-nasc').max = new Date().toISOString().slice(0, 10);
+        mostrarFoto(j && j.foto_path ? fotoUrls[j.foto_path] : null);
+        cadSave.textContent = j ? 'Salvar alterações' : 'Salvar cadastro';
+        cadForm.style.display = 'block';
+        cadForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        $('cad-nome').focus({ preventScroll: true });
+      }
+      function fecharForm(){ cadForm.style.display = 'none'; editId = null; fotoBlob = null; }
+
+      cadFoto.addEventListener('change', () => {
+        const file = cadFoto.files[0];
+        if (!file) return;
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          const max = 480, s = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(url);
+          c.toBlob(b => { fotoBlob = b; mostrarFoto(c.toDataURL('image/jpeg', 0.85)); }, 'image/jpeg', 0.85);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); cadFoto.value = ''; cadMsg('Não consegui ler esta imagem. Use JPG, PNG ou WEBP.', 'error'); };
+        img.src = url;
+      });
+
+      $('cad-tel').addEventListener('input', e => {
+        const d = e.target.value.replace(/\D/g, '').slice(0, 11);
+        let o = d;
+        if (d.length > 2) o = '(' + d.slice(0, 2) + ') ' + d.slice(2);
+        if (d.length > 6) o = '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(d.length - 4);
+        e.target.value = o;
+      });
+
+      cadForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const reg = {
+          nome_completo: $('cad-nome').value.trim().replace(/\s+/g, ' '),
+          apelido: $('cad-apelido').value.trim().replace(/\s+/g, ' '),
+          data_nascimento: $('cad-nasc').value,
+          telefone: $('cad-tel').value.trim() || null,
+          email: $('cad-email').value.trim().toLowerCase() || null,
+          posicao_1: $('cad-pos1').value,
+          posicao_2: $('cad-pos2').value || null
+        };
+        const erros = [];
+        if (reg.nome_completo.length < 3) erros.push('Preencha o nome completo.');
+        if (!reg.apelido) erros.push('Preencha o apelido.');
+        if (!reg.data_nascimento) erros.push('Preencha a data de nascimento.');
+        else if (reg.data_nascimento < '1920-01-01' || reg.data_nascimento > new Date().toISOString().slice(0, 10)) erros.push('Data de nascimento inválida.');
+        if (reg.telefone && !/^\(\d{2}\) \d{4,5}-\d{4}$/.test(reg.telefone)) erros.push('Telefone deve ter DDD + número, ex.: (11) 98765-4321.');
+        if (reg.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reg.email)) erros.push('E-mail inválido.');
+        if (!reg.posicao_1) erros.push('Escolha a posição preferida 1.');
+        if (reg.posicao_2 && reg.posicao_2 === reg.posicao_1) erros.push('A posição 2 tem de ser diferente da posição 1.');
+        if (erros.length){ cadMsg(erros.map(esc).join('<br>'), 'error'); return; }
+
+        cadSave.disabled = true;
+        cadMsg('Salvando...', 'info');
+        const editando = !!editId;
+        const id = editId || novoUuid();
+        const caminhoFoto = id + '.jpg';
+        try {
+          if (fotoBlob){
+            const up = await sb.storage.from(BUCKET).upload(caminhoFoto, fotoBlob, { upsert: true, contentType: 'image/jpeg', cacheControl: '60' });
+            if (up.error) throw new Error('Foto: ' + traduzErro(up.error));
+            reg.foto_path = caminhoFoto;
+          }
+          const res = editando
+            ? await sb.from('jogadores').update(reg).eq('id', id).select('id')
+            : await sb.from('jogadores').insert(Object.assign({ id }, reg)).select('id');
+          if (res.error){
+            if (!editando && fotoBlob) await sb.storage.from(BUCKET).remove([caminhoFoto]);
+            throw new Error(traduzErro(res.error));
+          }
+          if (editando && (!res.data || !res.data.length)) throw new Error('Este jogador não está mais no cadastro (foi excluído?).');
+          fecharForm();
+          await cadLoad();
+          cadMsg('✓ ' + esc(reg.apelido) + (editando ? ' atualizado.' : ' cadastrado.'), 'success');
+        } catch (err){
+          cadMsg('Erro: ' + esc(err.message), 'error');
+          console.error(err);
+        } finally {
+          cadSave.disabled = false;
+        }
+      });
+
+      cadList.addEventListener('click', async e => {
+        const bEdit = e.target.closest('[data-edit]'), bDel = e.target.closest('[data-del]');
+        if (bEdit){
+          const j = jogadores.find(x => x.id === bEdit.getAttribute('data-edit'));
+          if (j) abrirForm(j);
+          return;
+        }
+        if (!bDel) return;
+        const j = jogadores.find(x => x.id === bDel.getAttribute('data-del'));
+        if (!j || !confirm('Excluir o cadastro de ' + j.apelido + '?')) return;
+        cadMsg('Excluindo...', 'info');
+        try {
+          const res = await sb.from('jogadores').delete().eq('id', j.id);
+          if (res.error) throw new Error(traduzErro(res.error));
+          if (j.foto_path) await sb.storage.from(BUCKET).remove([j.foto_path]);
+          if (editId === j.id) fecharForm();
+          await cadLoad();
+          cadMsg('✓ ' + esc(j.apelido) + ' excluído.', 'success');
+        } catch (err){
+          cadMsg('Erro: ' + esc(err.message), 'error');
+          console.error(err);
+        }
+      });
+
+      $('cad-load').addEventListener('click', cadLoadSeguro);
+      $('cad-new').addEventListener('click', async () => {
+        try {
+          if (!jogadores) await cadLoad();
+          abrirForm(null);
+        } catch (err){ cadMsg('Erro: ' + esc(err.message), 'error'); }
+      });
+      $('cad-cancel').addEventListener('click', () => { fecharForm(); cadMsg('', ''); });
+
+      // Sessão já aberta neste navegador (o Supabase guarda o login): entra direto
+      if (sb){
+        sb.auth.getSession().then(async ({ data }) => {
+          if (data && data.session && await ehAdmin()) showLogged(data.session.user.email);
+        });
+      }
     })();
 
   </script>
