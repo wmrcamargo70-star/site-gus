@@ -88,7 +88,7 @@
           <datalist id="apelidos"></datalist>
           <div class="dica">Como você é chamado no G.U.S. (o mesmo que aparece no site).</div>
         </div>
-        <div class="campo"><label for="nasc">Data de nascimento <span class="obr">*</span></label><input type="date" id="nasc" min="1920-01-01" /></div>
+        <div class="campo"><label for="nasc">Data de nascimento <span class="obr">*</span></label><input type="text" id="nasc" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" autocomplete="bday" /><div class="dica">Digite só os números: as barras entram sozinhas.</div></div>
         <div class="duas">
           <div class="campo"><label for="tel">Celular</label><input type="tel" id="tel" inputmode="numeric" placeholder="(11) 99999-9999" maxlength="15" autocomplete="tel-national" /></div>
           <div class="campo"><label for="email">E-mail</label><input type="email" id="email" maxlength="120" autocomplete="email" /></div>
@@ -157,7 +157,19 @@
     }
     $('form').style.display = 'block';
     preencherPosicoes();
-    $('nasc').max = new Date().toISOString().slice(0, 10);
+
+    // Data digitada DD/MM/AAAA (barras automáticas); o banco recebe AAAA-MM-DD
+    function dataBrParaIso(s){
+      const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s).trim());
+      if (!m) return '';
+      const dt = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+      if (dt.getUTCFullYear() !== +m[3] || dt.getUTCMonth() !== +m[2] - 1 || dt.getUTCDate() !== +m[1]) return '';
+      return m[3] + '-' + m[2] + '-' + m[1];
+    }
+    $('nasc').addEventListener('input', e => {
+      const d = e.target.value.replace(/\D/g, '').slice(0, 8);
+      e.target.value = d.length > 4 ? d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4) : d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+    });
 
     sb.from('posicoes').select('nome').order('ordem').then(r => {
       if (!r.error && r.data && r.data.length){ POSICOES = r.data.map(p => p.nome); preencherPosicoes(); }
@@ -202,7 +214,7 @@
       const reg = {
         nome_completo: $('nome').value.trim().replace(/\s+/g, ' '),
         apelido: $('apelido').value.trim().replace(/\s+/g, ' '),
-        data_nascimento: $('nasc').value,
+        data_nascimento: dataBrParaIso($('nasc').value),
         telefone: $('tel').value.trim() || null,
         email: $('email').value.trim().toLowerCase() || null,
         posicao_1: $('pos1').value,
@@ -213,7 +225,8 @@
       const erros = [];
       if (reg.nome_completo.length < 3) erros.push('Preencha o nome completo.');
       if (!reg.apelido) erros.push('Preencha o apelido.');
-      if (!reg.data_nascimento) erros.push('Preencha a data de nascimento.');
+      if (!$('nasc').value.trim()) erros.push('Preencha a data de nascimento.');
+      else if (!reg.data_nascimento) erros.push('Data de nascimento inválida: use DD/MM/AAAA, ex.: 22/03/1964.');
       else if (reg.data_nascimento < '1920-01-01' || reg.data_nascimento > new Date().toISOString().slice(0, 10)) erros.push('Data de nascimento inválida.');
       if (reg.telefone && !/^\(\d{2}\) \d{4,5}-\d{4}$/.test(reg.telefone)) erros.push('Celular deve ter DDD + número, ex.: (11) 98765-4321.');
       if (reg.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reg.email)) erros.push('E-mail inválido.');

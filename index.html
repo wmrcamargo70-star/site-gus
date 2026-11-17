@@ -458,7 +458,7 @@
             <div class="cad-grid">
               <div class="cad-field cad-full"><label for="cad-nome">Nome completo *</label><input id="cad-nome" maxlength="120" /></div>
               <div class="cad-field"><label for="cad-apelido">Apelido *</label><input id="cad-apelido" maxlength="40" /></div>
-              <div class="cad-field"><label for="cad-nasc">Data de nascimento *</label><input type="date" id="cad-nasc" min="1920-01-01" /></div>
+              <div class="cad-field"><label for="cad-nasc">Data de nascimento *</label><input type="text" id="cad-nasc" inputmode="numeric" placeholder="DD/MM/AAAA" maxlength="10" /></div>
               <div class="cad-field"><label for="cad-tel">Telefone</label><input type="tel" id="cad-tel" placeholder="(11) 99999-9999" maxlength="15" /></div>
               <div class="cad-field"><label for="cad-email">E-mail</label><input type="email" id="cad-email" maxlength="120" /></div>
               <div class="cad-field"><label for="cad-pos1">Posição preferida 1 *</label><select id="cad-pos1"></select></div>
@@ -1206,12 +1206,11 @@
         $('cad-form-title').textContent = j ? 'Editar ' + j.apelido : 'Novo jogador';
         $('cad-nome').value = j ? j.nome_completo || '' : '';
         $('cad-apelido').value = j ? j.apelido || '' : '';
-        $('cad-nasc').value = j ? j.data_nascimento || '' : '';
+        $('cad-nasc').value = j && j.data_nascimento ? formatDate(j.data_nascimento) : '';
         $('cad-tel').value = j ? j.telefone || '' : '';
         $('cad-email').value = j ? j.email || '' : '';
         $('cad-pos1').value = j ? j.posicao_1 || '' : '';
         $('cad-pos2').value = j ? j.posicao_2 || '' : '';
-        $('cad-nasc').max = new Date().toISOString().slice(0, 10);
         mostrarFoto(j && j.foto_path ? fotoUrls[j.foto_path] : null);
         cadSave.textContent = j ? 'Salvar alterações' : 'Salvar cadastro';
         cadForm.style.display = 'block';
@@ -1247,12 +1246,25 @@
         e.target.value = o;
       });
 
+      // Data digitada DD/MM/AAAA (barras automáticas); o banco recebe AAAA-MM-DD
+      function dataBrParaIso(s){
+        const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(s).trim());
+        if (!m) return '';
+        const dt = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+        if (dt.getUTCFullYear() !== +m[3] || dt.getUTCMonth() !== +m[2] - 1 || dt.getUTCDate() !== +m[1]) return '';
+        return m[3] + '-' + m[2] + '-' + m[1];
+      }
+      $('cad-nasc').addEventListener('input', e => {
+        const d = e.target.value.replace(/\D/g, '').slice(0, 8);
+        e.target.value = d.length > 4 ? d.slice(0, 2) + '/' + d.slice(2, 4) + '/' + d.slice(4) : d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d;
+      });
+
       cadForm.addEventListener('submit', async e => {
         e.preventDefault();
         const reg = {
           nome_completo: $('cad-nome').value.trim().replace(/\s+/g, ' '),
           apelido: $('cad-apelido').value.trim().replace(/\s+/g, ' '),
-          data_nascimento: $('cad-nasc').value,
+          data_nascimento: dataBrParaIso($('cad-nasc').value),
           telefone: $('cad-tel').value.trim() || null,
           email: $('cad-email').value.trim().toLowerCase() || null,
           posicao_1: $('cad-pos1').value,
@@ -1261,7 +1273,8 @@
         const erros = [];
         if (reg.nome_completo.length < 3) erros.push('Preencha o nome completo.');
         if (!reg.apelido) erros.push('Preencha o apelido.');
-        if (!reg.data_nascimento) erros.push('Preencha a data de nascimento.');
+        if (!$('cad-nasc').value.trim()) erros.push('Preencha a data de nascimento.');
+        else if (!reg.data_nascimento) erros.push('Data de nascimento inválida: use DD/MM/AAAA, ex.: 22/03/1964.');
         else if (reg.data_nascimento < '1920-01-01' || reg.data_nascimento > new Date().toISOString().slice(0, 10)) erros.push('Data de nascimento inválida.');
         if (reg.telefone && !/^\(\d{2}\) \d{4,5}-\d{4}$/.test(reg.telefone)) erros.push('Telefone deve ter DDD + número, ex.: (11) 98765-4321.');
         if (reg.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(reg.email)) erros.push('E-mail inválido.');
