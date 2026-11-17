@@ -242,6 +242,11 @@
     .cad-actions{display:flex;flex-direction:column;gap:.35rem}
     .cad-mini{cursor:pointer;border:1px solid var(--gus-blue);background:transparent;color:var(--gus-blue);padding:.3rem .7rem;border-radius:6px;font-size:.78rem;font-weight:700;font-family:inherit}
     .cad-mini.cad-del{border-color:var(--gus-red);color:var(--gus-red)}
+    .cad-mini.cad-ok{background:var(--gus-blue);color:#fff}
+    .pend-box{margin-top:1.25rem;border:2px dashed var(--gus-blue);border-radius:10px;padding:1rem;background:#EFF6FF}
+    .pend-box h4{color:var(--gus-blue-dark);font-size:.95rem;margin-bottom:.25rem;text-transform:uppercase;letter-spacing:.5px}
+    .pend-box .cad-list{margin-top:.75rem}
+    .pend-data{font-size:.75rem;color:var(--gray-500)}
     @media(max-width:600px){.cad-grid{grid-template-columns:1fr}}
 
   
@@ -435,6 +440,11 @@
             <button type="button" class="upload-btn upload-btn-publish" id="cad-new">+ Novo jogador</button>
           </div>
           <div id="cad-msg"></div>
+          <div class="pend-box" id="pend-box" style="display:none">
+            <h4>Recebidos pelo link (<span id="pend-qtd">0</span>)</h4>
+            <p class="upload-token-hint">Fichas que os jogadores enviaram pelo link do WhatsApp. Confira e clique em <strong>Aprovar</strong> para entrar no cadastro, ou <strong>Descartar</strong> (ex.: envio repetido).</p>
+            <div id="pend-list" class="cad-list"></div>
+          </div>
           <form id="cad-form" class="cad-form" style="display:none" autocomplete="off" novalidate>
             <h4 id="cad-form-title">Novo jogador</h4>
             <div class="cad-photo-row">
@@ -1082,9 +1092,94 @@
           if (!r.error && r.data) r.data.forEach(x => { if (x.signedUrl) fotoUrls[x.path] = x.signedUrl; });
         }
         renderCad();
-        cadMsg(jogadores.length + ' jogador(es) cadastrado(s).', 'success');
+        await carregarPendentes();
+        cadMsg(jogadores.length + ' jogador(es) cadastrado(s)' + (pendentes.length ? ' · ' + pendentes.length + ' recebido(s) pelo link aguardando aprovação.' : '.'), 'success');
       }
       function cadLoadSeguro(){ cadLoad().catch(err => cadMsg('Erro: ' + esc(err.message), 'error')); }
+
+      // ----- Fichas recebidas pelo link público (cadastro.html) -----
+      const BUCKET_PEND = 'fotos-pendentes';
+      let pendentes = [];
+      let pendUrls = {};
+      async function carregarPendentes(){
+        const { data, error } = await sb.from('pre_cadastros').select('*').eq('status', 'pendente').order('enviado_em');
+        if (error){ pendentes = []; $('pend-box').style.display = 'none'; return; } // tabela ainda não criada
+        pendentes = data || [];
+        pendUrls = {};
+        const paths = pendentes.map(p => p.foto_path).filter(Boolean);
+        if (paths.length){
+          const r = await sb.storage.from(BUCKET_PEND).createSignedUrls(paths, 3600);
+          if (!r.error && r.data) r.data.forEach(x => { if (x.signedUrl) pendUrls[x.path] = x.signedUrl; });
+        }
+        renderPendentes();
+      }
+      function chaveApelido(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase(); }
+      function renderPendentes(){
+        $('pend-qtd').textContent = pendentes.length;
+        $('pend-box').style.display = pendentes.length ? 'block' : 'none';
+        $('pend-list').innerHTML = pendentes.map(p => {
+          const foto = p.foto_path && pendUrls[p.foto_path];
+          const existe = jogadores.find(j => chaveApelido(j.apelido) === chaveApelido(p.apelido));
+          return '<div class="cad-item">' +
+            '<div class="cad-thumb">' + (foto ? '<img src="'+esc(foto)+'" alt="">' : esc(String(p.apelido || '?').charAt(0).toUpperCase())) + '</div>' +
+            '<div class="cad-info"><strong>'+esc(p.apelido)+'</strong> <span class="cad-sub">'+esc(p.nome_completo)+'</span><br>' +
+              '<span class="cad-sub">'+formatDate(p.data_nascimento)+' · '+esc([p.posicao_1, p.posicao_2].filter(Boolean).join(' / '))+'</span>' +
+              ((p.telefone || p.email) ? '<br><span class="cad-sub">'+esc([p.telefone, p.email].filter(Boolean).join(' · '))+'</span>' : '') +
+              '<br><span class="pend-data">Enviado em '+esc(new Date(p.enviado_em).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }))+
+              (existe ? ' · <strong style="color:var(--gus-red)">já existe "'+esc(existe.apelido)+'" no cadastro: aprovar atualiza a ficha</strong>' : '')+'</span>' +
+            '</div>' +
+            '<div class="cad-actions"><button type="button" class="cad-mini cad-ok" data-aprovar="'+esc(p.id)+'">Aprovar</button>' +
+            '<button type="button" class="cad-mini cad-del" data-descartar="'+esc(p.id)+'">Descartar</button></div>' +
+          '</div>';
+        }).join('');
+      }
+      async function aprovarPendente(p){
+        const existe = jogadores.find(j => chaveApelido(j.apelido) === chaveApelido(p.apelido));
+        if (existe && !confirm('Já existe "' + existe.apelido + '" no cadastro. Atualizar a ficha dele com os dados enviados?')) return;
+        if (!existe && !confirm('Aprovar o cadastro de ' + p.apelido + '?')) return;
+        cadMsg('Aprovando ' + esc(p.apelido) + '...', 'info');
+        const jogadorId = existe ? existe.id : novoUuid();
+        const reg = {
+          nome_completo: p.nome_completo, apelido: p.apelido, data_nascimento: p.data_nascimento,
+          telefone: p.telefone, email: p.email, posicao_1: p.posicao_1, posicao_2: p.posicao_2
+        };
+        if (p.foto_path){
+          const dl = await sb.storage.from(BUCKET_PEND).download(p.foto_path);
+          if (dl.error) throw new Error('Foto: ' + traduzErro(dl.error));
+          const up = await sb.storage.from(BUCKET).upload(jogadorId + '.jpg', dl.data, { upsert: true, contentType: 'image/jpeg', cacheControl: '60' });
+          if (up.error) throw new Error('Foto: ' + traduzErro(up.error));
+          reg.foto_path = jogadorId + '.jpg';
+        }
+        const res = existe
+          ? await sb.from('jogadores').update(reg).eq('id', jogadorId).select('id')
+          : await sb.from('jogadores').insert(Object.assign({ id: jogadorId }, reg)).select('id');
+        if (res.error) throw new Error(traduzErro(res.error));
+        const u = await sb.auth.getUser();
+        const mk = await sb.from('pre_cadastros').update({
+          status: 'aprovado', revisado_em: new Date().toISOString(),
+          revisado_por: u.data && u.data.user ? u.data.user.id : null, jogador_id: jogadorId
+        }).eq('id', p.id);
+        if (mk.error) throw new Error(traduzErro(mk.error));
+        if (p.foto_path) await sb.storage.from(BUCKET_PEND).remove([p.foto_path]);
+        await cadLoad();
+        cadMsg('✓ ' + esc(p.apelido) + (existe ? ' atualizado com a ficha enviada.' : ' aprovado e incluído no cadastro.'), 'success');
+      }
+      async function descartarPendente(p){
+        if (!confirm('Descartar a ficha enviada por ' + p.apelido + '? Os dados e a foto desse envio serão apagados.')) return;
+        cadMsg('Descartando...', 'info');
+        const res = await sb.from('pre_cadastros').delete().eq('id', p.id);
+        if (res.error) throw new Error(traduzErro(res.error));
+        if (p.foto_path) await sb.storage.from(BUCKET_PEND).remove([p.foto_path]);
+        await cadLoad();
+        cadMsg('Ficha de ' + esc(p.apelido) + ' descartada.', 'success');
+      }
+      $('pend-list').addEventListener('click', e => {
+        const a = e.target.closest('[data-aprovar]'), d = e.target.closest('[data-descartar]');
+        const id = a ? a.getAttribute('data-aprovar') : d ? d.getAttribute('data-descartar') : null;
+        const p = id && pendentes.find(x => x.id === id);
+        if (!p) return;
+        (a ? aprovarPendente(p) : descartarPendente(p)).catch(err => { cadMsg('Erro: ' + esc(err.message), 'error'); console.error(err); });
+      });
 
       function renderCad(){
         const js = jogadores.slice().sort((a, b) => String(a.apelido).localeCompare(String(b.apelido), 'pt-BR'));
