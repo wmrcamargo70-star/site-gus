@@ -250,6 +250,35 @@
     @media(max-width:600px){.cad-grid{grid-template-columns:1fr}}
 
   
+    /* Calendário de treinos/jogos e súmulas */
+    .cal-topo{display:flex;justify-content:center;flex-wrap:wrap;gap:.6rem 1.2rem;margin-bottom:1.5rem;font-size:.85rem;color:var(--gray-700)}
+    .cal-topo span{display:inline-flex;align-items:center;gap:.4rem}
+    .cal-topo i{display:inline-block;width:16px;height:16px;border-radius:4px}
+    .cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:1rem}
+    .cal-mes{background:var(--gus-white);border-radius:var(--radius);box-shadow:var(--shadow-md);border-top:3px solid var(--gus-blue);padding:1rem}
+    .cal-mes h3{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:1px;color:var(--gus-blue-dark);margin-bottom:.6rem}
+    .cal-dias{display:grid;grid-template-columns:repeat(5,1fr);gap:.4rem}
+    .cal-dia{border:none;border-radius:8px;padding:.35rem 0;font-family:inherit;text-align:center;line-height:1.1;cursor:default;background:var(--gray-100);color:var(--gray-700);position:relative}
+    .cal-dia b{display:block;font-size:1.05rem}
+    .cal-dia small{font-size:.65rem;text-transform:uppercase;font-weight:700;letter-spacing:.3px}
+    .cal-dia.ok{background:#16A34A;color:#fff;cursor:pointer}
+    .cal-dia.falta{background:var(--gus-red);color:#fff}
+    .cal-dia.sem{background:var(--gray-200);color:var(--gray-500);text-decoration:line-through}
+    .cal-dia.hoje{outline:3px solid var(--gus-blue);outline-offset:1px}
+    .cal-dia.jogo::after{content:'J';position:absolute;top:-5px;right:-4px;background:var(--gus-blue);color:#fff;font-size:.6rem;font-weight:800;border-radius:50%;width:15px;height:15px;line-height:15px;text-decoration:none}
+    .cal-admin .cal-dia{cursor:pointer}
+    .cal-aviso{text-align:center;font-size:.85rem;color:var(--gray-500);margin-top:1rem}
+    .cal-modal{position:fixed;inset:0;background:rgba(17,24,39,.55);display:none;align-items:center;justify-content:center;z-index:300;padding:16px}
+    .cal-modal.aberto{display:flex}
+    .cal-caixa{background:#fff;border-radius:var(--radius);max-width:440px;width:100%;padding:1.4rem;box-shadow:var(--shadow-lg);max-height:92vh;overflow:auto}
+    .cal-caixa h3{color:var(--gus-blue-dark);margin-bottom:.8rem}
+    .cal-caixa label{display:block;font-size:.78rem;font-weight:700;color:var(--gray-700);text-transform:uppercase;letter-spacing:.5px;margin:.9rem 0 .35rem}
+    .cal-caixa select,.cal-caixa input[type=file]{width:100%;padding:.6rem;border:2px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:.95rem}
+    .cal-prev{margin-top:.8rem;text-align:center}
+    .cal-prev img{max-width:100%;max-height:260px;border-radius:8px;border:1px solid var(--gray-200)}
+    .cal-prev a{font-weight:700;color:var(--gus-blue)}
+    .cal-botoes{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1.2rem}
+
     .rank-group{margin-bottom:2.5rem}
     .rank-group:last-child{margin-bottom:0}
     .rank-group-title{text-align:center;margin-bottom:1.25rem;font-size:1.05rem;color:var(--gus-gray-700,#374151);font-weight:700;text-transform:uppercase;letter-spacing:1px}
@@ -278,7 +307,7 @@
         <a href="#dashboard" class="nav-link">Dashboard</a>
         <a href="#rankings" class="nav-link">Rankings</a>
         <a href="#jogadores" class="nav-link">Jogadores</a>
-      
+        <a href="#calendario" class="nav-link">Calendário</a>
         <a href="#admin" class="nav-link">Admin</a>
       </nav>
     </div>
@@ -385,7 +414,38 @@
       </div>
     </div>
   </section>
-  <section id="admin" class="section section-alt">
+  <section id="calendario" class="section section-alt">
+    <div class="container">
+      <div class="section-header"><h2 class="section-title">Calendário <span id="cal-ano"></span></h2><p class="section-desc">Treinos e jogos às quartas e sábados — clique numa data verde para ver a súmula</p></div>
+      <div class="cal-topo">
+        <span><i style="background:#16A34A"></i>Súmula anexada</span>
+        <span><i style="background:var(--gus-red)"></i>Sem súmula (data passou)</span>
+        <span><i style="background:var(--gray-100);border:1px solid var(--gray-200)"></i>A realizar</span>
+        <span><i style="background:var(--gray-200)"></i>Sem treino</span>
+        <span><i style="background:var(--gus-blue);border-radius:50%"></i>J = jogo</span>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <p class="cal-aviso" id="cal-aviso"></p>
+    </div>
+  </section>
+  <div class="cal-modal" id="cal-modal" role="dialog" aria-modal="true">
+    <div class="cal-caixa">
+      <h3 id="cal-titulo">Súmula</h3>
+      <label for="cal-tipo">Tipo</label>
+      <select id="cal-tipo"><option value="treino">Treino</option><option value="jogo">Jogo</option><option value="sem_treino">Sem treino</option></select>
+      <label for="cal-arquivo">Súmula (foto ou PDF)</label>
+      <input type="file" id="cal-arquivo" accept="image/*,application/pdf" />
+      <div class="upload-token-hint">Foto da súmula inteira, bem iluminada e reta (as 4 marcas pretas dos cantos aparecendo).</div>
+      <div class="cal-prev" id="cal-prev"></div>
+      <div id="cal-msg"></div>
+      <div class="cal-botoes">
+        <button type="button" class="upload-btn upload-btn-publish" id="cal-salvar">Salvar</button>
+        <button type="button" class="upload-btn upload-btn-reset" id="cal-remover">Remover</button>
+        <button type="button" class="upload-btn upload-btn-reset" id="cal-fechar">Fechar</button>
+      </div>
+    </div>
+  </div>
+  <section id="admin" class="section">
     <div class="container">
       <div class="section-header">
         <h2 class="section-title">Admin</h2>
@@ -740,10 +800,12 @@
         adminContent.style.display = 'block';
         loggedUser.textContent = user;
         cadLoadSeguro();
+        calDefinirAdmin(true);
       }
       function showLogin(){
         loginCard.style.display = 'block';
         adminContent.style.display = 'none';
+        calDefinirAdmin(false);
         passInput.value = '';
         errorEl.style.display = 'none';
       }
@@ -1344,6 +1406,166 @@
         } catch (err){ cadMsg('Erro: ' + esc(err.message), 'error'); }
       });
       $('cad-cancel').addEventListener('click', () => { fecharForm(); cadMsg('', ''); });
+
+      // ----- Calendário de treinos/jogos + súmulas (tabela public.sumulas, bucket público "sumulas") -----
+      // Todos veem; só administrador anexa/troca/remove. Verde = súmula anexada; vermelho = data passou sem súmula.
+      const CAL_ANO = 2027;
+      const CAL_BUCKET = 'sumulas';
+      const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+      let calMapa = {};          // 'AAAA-MM-DD' -> registro da súmula
+      let calAdmin = false;
+      let calData = null;        // data aberta no painel do administrador
+      let calArquivo = null;     // { blob, ext } escolhido no painel
+      const calGrid = $('cal-grid'), calModal = $('cal-modal');
+      $('cal-ano').textContent = CAL_ANO;
+
+      function isoLocal(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+      function calUrl(r){
+        if (!r || !r.arquivo_path || !sb) return null;
+        return sb.storage.from(CAL_BUCKET).getPublicUrl(r.arquivo_path).data.publicUrl + '?v=' + Date.parse(r.enviado_em || 0);
+      }
+      function calRender(){
+        const hoje = isoLocal(new Date());
+        let html = '';
+        for (let m = 0; m < 12; m++){
+          let dias = '';
+          for (let d = new Date(CAL_ANO, m, 1); d.getMonth() === m; d.setDate(d.getDate() + 1)){
+            const dow = d.getDay();
+            if (dow !== 3 && dow !== 6) continue;           // quartas e sábados
+            const iso = isoLocal(d), r = calMapa[iso];
+            let cls = 'cal-dia', dica = '';
+            if (r && r.tipo === 'sem_treino'){ cls += ' sem'; dica = 'Sem treino'; }
+            else if (r && r.arquivo_path){ cls += ' ok'; dica = 'Súmula anexada' + (r.lida_em ? ' e lançada' : ''); }
+            else if (iso < hoje){ cls += ' falta'; dica = 'Data passou e não tem súmula'; }
+            else dica = 'A realizar';
+            if (r && r.tipo === 'jogo') cls += ' jogo';
+            if (iso === hoje) cls += ' hoje';
+            dias += '<button type="button" class="' + cls + '" data-cal="' + iso + '" title="' + esc(formatDate(iso) + ' — ' + dica) + '">' +
+              '<small>' + (dow === 3 ? 'Qua' : 'Sáb') + '</small><b>' + String(d.getDate()).padStart(2, '0') + '</b></button>';
+          }
+          html += '<div class="cal-mes"><h3>' + MESES[m] + '</h3><div class="cal-dias">' + dias + '</div></div>';
+        }
+        calGrid.innerHTML = html;
+        calGrid.classList.toggle('cal-admin', calAdmin);
+        const n = Object.values(calMapa).filter(r => r.arquivo_path).length;
+        $('cal-aviso').textContent = n + ' súmula(s) anexada(s) em ' + CAL_ANO + '.' + (calAdmin ? ' Você está como administrador: clique em qualquer data para anexar ou trocar a súmula.' : '');
+      }
+      async function calCarregar(){
+        calMapa = {};
+        if (sb){
+          const { data, error } = await sb.from('sumulas').select('data,tipo,arquivo_path,enviado_em,lida_em,observacao')
+            .gte('data', CAL_ANO + '-01-01').lte('data', CAL_ANO + '-12-31');
+          if (!error && data) data.forEach(r => { calMapa[r.data] = r; });
+          else if (error) console.warn('Calendário: ', error.message);
+        }
+        calRender();
+      }
+      function calDefinirAdmin(v){ calAdmin = v; calRender(); }
+
+      function calMsg(html, tipo){ $('cal-msg').innerHTML = html ? '<div class="upload-msg upload-msg-' + tipo + '">' + html + '</div>' : ''; }
+      function calPrevia(){
+        const r = calMapa[calData], prev = $('cal-prev');
+        if (calArquivo){
+          prev.innerHTML = calArquivo.ext === 'pdf' ? '<strong>PDF escolhido:</strong> ' + esc(calArquivo.nome) : '<img src="' + calArquivo.previa + '" alt="Prévia da súmula">';
+        } else if (r && r.arquivo_path){
+          const u = calUrl(r);
+          prev.innerHTML = /\.pdf$/i.test(r.arquivo_path) ? '<a href="' + esc(u) + '" target="_blank" rel="noopener">Abrir a súmula atual (PDF)</a>'
+            : '<a href="' + esc(u) + '" target="_blank" rel="noopener"><img src="' + esc(u) + '" alt="Súmula atual"></a>';
+        } else prev.innerHTML = '';
+      }
+      function calAbrir(iso){
+        calData = iso; calArquivo = null;
+        const r = calMapa[iso];
+        const dow = new Date(iso + 'T12:00:00').getDay();
+        $('cal-titulo').textContent = (dow === 3 ? 'Quarta, ' : dow === 6 ? 'Sábado, ' : '') + formatDate(iso);
+        $('cal-tipo').value = r ? r.tipo : 'treino';
+        $('cal-arquivo').value = '';
+        $('cal-remover').style.display = r ? '' : 'none';
+        calMsg(r && r.lida_em ? 'Esta súmula já foi lida e lançada na base em ' + esc(new Date(r.lida_em).toLocaleDateString('pt-BR')) + '. Se trocar o arquivo, ela volta para a fila de leitura.' : '', 'info');
+        calPrevia();
+        calModal.classList.add('aberto');
+      }
+      function calFechar(){ calModal.classList.remove('aberto'); calData = null; calArquivo = null; }
+
+      calGrid.addEventListener('click', e => {
+        const b = e.target.closest('[data-cal]');
+        if (!b) return;
+        const iso = b.getAttribute('data-cal'), r = calMapa[iso];
+        if (calAdmin) return calAbrir(iso);
+        if (r && r.arquivo_path) window.open(calUrl(r), '_blank', 'noopener');
+      });
+      $('cal-fechar').addEventListener('click', calFechar);
+      calModal.addEventListener('click', e => { if (e.target === calModal) calFechar(); });
+
+      $('cal-arquivo').addEventListener('change', () => {
+        const f = $('cal-arquivo').files[0];
+        calArquivo = null;
+        if (!f) return calPrevia();
+        if (f.type === 'application/pdf' || /\.pdf$/i.test(f.name)){
+          if (f.size > 15 * 1024 * 1024){ calMsg('PDF maior que 15 MB.', 'error'); $('cal-arquivo').value = ''; return; }
+          calArquivo = { blob: f, ext: 'pdf', nome: f.name };
+          return calPrevia();
+        }
+        const url = URL.createObjectURL(f), img = new Image();
+        img.onload = () => {
+          // reduz para no máximo 2400 px (continua legível para a leitura automática)
+          const max = 2400, s = Math.min(1, max / Math.max(img.width, img.height));
+          const c = document.createElement('canvas');
+          c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+          const ctx = c.getContext('2d');
+          ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          URL.revokeObjectURL(url);
+          c.toBlob(b => { calArquivo = { blob: b, ext: 'jpg', nome: f.name, previa: c.toDataURL('image/jpeg', 0.6) }; calMsg('', ''); calPrevia(); }, 'image/jpeg', 0.88);
+        };
+        img.onerror = () => { URL.revokeObjectURL(url); $('cal-arquivo').value = ''; calMsg('Não consegui abrir esta imagem. Use JPG, PNG ou PDF.', 'error'); };
+        img.src = url;
+      });
+
+      $('cal-salvar').addEventListener('click', async () => {
+        if (!calData) return;
+        const tipo = $('cal-tipo').value, atual = calMapa[calData];
+        if (tipo !== 'sem_treino' && !calArquivo && !(atual && atual.arquivo_path)){ calMsg('Escolha a foto ou o PDF da súmula.', 'error'); return; }
+        $('cal-salvar').disabled = true;
+        calMsg('Salvando...', 'info');
+        try {
+          let caminho = atual ? atual.arquivo_path : null;
+          if (calArquivo){
+            const novo = calData.slice(0, 4) + '/' + calData + '.' + calArquivo.ext;
+            const up = await sb.storage.from(CAL_BUCKET).upload(novo, calArquivo.blob, { upsert: true, contentType: calArquivo.ext === 'pdf' ? 'application/pdf' : 'image/jpeg', cacheControl: '60' });
+            if (up.error) throw new Error('Arquivo: ' + traduzErro(up.error));
+            if (caminho && caminho !== novo) await sb.storage.from(CAL_BUCKET).remove([caminho]);
+            caminho = novo;
+          }
+          const reg = { data: calData, tipo, arquivo_path: caminho, enviado_em: new Date().toISOString(),
+            lida_em: calArquivo ? null : (atual ? atual.lida_em : null) };
+          const res = await sb.from('sumulas').upsert(reg, { onConflict: 'data' });
+          if (res.error) throw new Error(traduzErro(res.error));
+          await calCarregar();
+          calFechar();
+          $('cal-aviso').textContent = '✓ Súmula de ' + formatDate(reg.data) + ' salva. ' + $('cal-aviso').textContent;
+        } catch (err){
+          calMsg('Erro: ' + esc(err.message), 'error');
+          console.error(err);
+        } finally {
+          $('cal-salvar').disabled = false;
+        }
+      });
+
+      $('cal-remover').addEventListener('click', async () => {
+        const r = calMapa[calData];
+        if (!r || !confirm('Remover a súmula de ' + formatDate(calData) + '? O arquivo será apagado.')) return;
+        calMsg('Removendo...', 'info');
+        try {
+          const res = await sb.from('sumulas').delete().eq('data', calData);
+          if (res.error) throw new Error(traduzErro(res.error));
+          if (r.arquivo_path) await sb.storage.from(CAL_BUCKET).remove([r.arquivo_path]);
+          await calCarregar();
+          calFechar();
+        } catch (err){ calMsg('Erro: ' + esc(err.message), 'error'); }
+      });
+
+      calCarregar();
 
       // Sessão já aberta neste navegador (o Supabase guarda o login): entra direto
       if (sb){
