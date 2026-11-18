@@ -305,6 +305,8 @@
     .score-ok{color:#16A34A;font-size:.75rem}
     .score-resumo{font-size:.82rem;color:var(--gray-700);margin-top:.7rem}
     .score-conc{font-size:.66rem;color:var(--gray-500);line-height:1.1}
+    .score-table select{width:auto;min-width:8.6em;text-align:left;padding:.3rem .3rem}
+    .score-media{font-size:.7rem;color:var(--gray-500);margin-top:.2rem;white-space:nowrap}
     .aval-box{margin-top:1rem;border:2px dashed var(--gus-blue);border-radius:10px;padding:1rem;background:#EFF6FF}
     .aval-box h4{color:var(--gus-blue-dark);font-size:.95rem;text-transform:uppercase;letter-spacing:.5px;margin-bottom:.25rem}
     .aval-novo{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.7rem}
@@ -579,8 +581,8 @@
           <p class="lead">Só administradores veem. O score final usa a <strong>média das notas dos avaliadores</strong> (link pessoal abaixo). Base para a montagem automática dos times: mesmo número de <strong>+60</strong> e <strong>-50</strong> em cada time e o mesmo peso em pontos.</p>
           <div class="score-legenda">
             <strong>Idade</strong> (automática): até 49 anos = 5 · 50–60 = 4 · 61–69 = 3 · 70–75 = 2 · 76+ = 1<br>
-            <strong>Habilidade</strong> e <strong>Condicionamento físico</strong>: média das notas dos avaliadores ativos —
-            1 = Ruim · 2 = Regular · 3 = Bom · 4 = Muito bom · 5 = Excelente<br>
+            <strong>Habilidade</strong> e <strong>Condicionamento físico</strong>: escolha a sua nota na lista (vale como a sua avaliação); abaixo aparece a média de todos os avaliadores ativos —
+            1 = Abaixo · 2 = Regular · 3 = Bom · 4 = Muito bom · 5 = Excelente<br>
             <strong>Score</strong> = Idade + Habilidade + Condicionamento físico (3 a 15)
           </div>
 
@@ -1530,18 +1532,41 @@
       let scoreLista = [];      // { apelido, idade, habilidade, fisico, avaliacoes }
       const fmt1 = v => v == null ? '–' : (Math.round(v * 10) / 10).toFixed(1).replace('.', ',');
       // Escala de Habilidade e Condicionamento físico (Wagner, 18/11/2026); a média mostra o conceito mais próximo
-      const CONCEITOS = { 1: 'Ruim', 2: 'Regular', 3: 'Bom', 4: 'Muito bom', 5: 'Excelente' };
+      const CONCEITOS = { 1: 'Abaixo', 2: 'Regular', 3: 'Bom', 4: 'Muito bom', 5: 'Excelente' };
       const comConceito = v => v == null ? '–' : fmt1(v) + '<div class="score-conc">' + (CONCEITOS[Math.min(5, Math.max(1, Math.round(v)))] || '') + '</div>';
       function scoreMsg(html, tipo){ $('score-msg').innerHTML = html ? '<div class="upload-msg upload-msg-' + tipo + '">' + html + '</div>' : ''; }
       function idadeDeData(iso){ if (!iso) return null; const [y, m, d] = iso.split('-').map(Number), h = new Date(); let a = h.getFullYear() - y; if (h.getMonth() + 1 < m || (h.getMonth() + 1 === m && h.getDate() < d)) a--; return a; }
+      // A nota escolhida no Admin conta como a avaliação do próprio administrador (um avaliador "Admin · e-mail").
+      let adminToken = null;
+      const minhasNotas = {};   // apelido -> { habilidade, fisico } do administrador logado
+      async function garantirAvaliadorAdmin(){
+        const s = await sb.auth.getSession();
+        const email = s.data && s.data.session ? s.data.session.user.email : 'admin';
+        const nome = ('Admin · ' + email).slice(0, 60);
+        const r = await sb.from('avaliadores').select('token,ativo').eq('nome', nome).limit(1);
+        if (r.error) throw new Error(traduzErro(r.error));
+        if (r.data && r.data.length){
+          if (!r.data[0].ativo) await sb.from('avaliadores').update({ ativo: true }).eq('token', r.data[0].token);
+          return r.data[0].token;
+        }
+        const token = novoToken();
+        const ins = await sb.from('avaliadores').insert({ token, nome });
+        if (ins.error) throw new Error(traduzErro(ins.error));
+        return token;
+      }
       async function scoreCarregar(){
         if (!sb) return;
-        const [medias, cad] = await Promise.all([
+        try { adminToken = await garantirAvaliadorAdmin(); }
+        catch (e){ scoreMsg(/does not exist|schema cache/i.test(e.message) ? 'Tabelas de avaliação ainda não criadas no banco (rodar o script 05-avaliacoes.sql).' : 'Erro: ' + esc(e.message), 'error'); return; }
+        const [medias, cad, minhas] = await Promise.all([
           sb.from('score_medio').select('apelido,habilidade,fisico,avaliacoes'),
-          sb.from('jogadores').select('apelido,data_nascimento')
+          sb.from('jogadores').select('apelido,data_nascimento'),
+          sb.from('avaliacoes').select('apelido,habilidade,fisico').eq('token', adminToken)
         ]);
-        if (medias.error){ scoreMsg(/does not exist|schema cache/i.test(medias.error.message) ? 'Tabelas de avaliação ainda não criadas no banco (rodar o script 05-avaliacoes.sql).' : 'Erro: ' + esc(traduzErro(medias.error)), 'error'); return; }
+        if (medias.error){ scoreMsg('Erro: ' + esc(traduzErro(medias.error)), 'error'); return; }
         scoreMsg('', '');
+        Object.keys(minhasNotas).forEach(k => delete minhasNotas[k]);
+        ((minhas && minhas.data) || []).forEach(n => { minhasNotas[n.apelido] = { habilidade: n.habilidade, fisico: n.fisico }; });
         const mapa = {}; (medias.data || []).forEach(n => { mapa[chaveApelido(n.apelido)] = n; });
         const nasc = {}; ((cad && cad.data) || []).forEach(j => { nasc[chaveApelido(j.apelido)] = j.data_nascimento; });
         // jogadores = os do site (planilha), sem Cornetas, + os do cadastro que ainda não estão na planilha
@@ -1557,6 +1582,25 @@
         scoreRender();
       }
       function scoreTotal(p){ const ni = notaIdade(p.idade); return (p.habilidade == null || p.fisico == null || ni == null) ? null : ni + p.habilidade + p.fisico; }
+      function listaNota(ap, campo){
+        const v = minhasNotas[ap] ? minhasNotas[ap][campo] : null;
+        return '<select data-ap="' + esc(ap) + '" data-campo="' + campo + '" class="' + (v == null ? 'vazio' : '') + '">' +
+          '<option value=""' + (v == null ? ' selected' : '') + '>– escolha –</option>' +
+          [1, 2, 3, 4, 5].map(n => '<option value="' + n + '"' + (v === n ? ' selected' : '') + '>' + n + ' - ' + CONCEITOS[n] + '</option>').join('') + '</select>';
+      }
+      function celulaNota(p, campo){
+        return listaNota(p.apelido, campo) + '<div class="score-media" data-media="' + campo + '">' + (p[campo] == null ? 'média: –' : 'média: ' + comConceitoTexto(p[campo])) + '</div>';
+      }
+      function comConceitoTexto(v){ return fmt1(v) + ' ' + (CONCEITOS[Math.min(5, Math.max(1, Math.round(v)))] || ''); }
+      function linhaScore(p){
+        const faixa = p.idade >= 60 ? '<span class="score-faixa f60">+60</span>' : (p.idade != null && p.idade < 50 ? '<span class="score-faixa f50">-50</span>' : '');
+        const t = scoreTotal(p), ni = notaIdade(p.idade);
+        return '<tr data-linha="' + esc(p.apelido) + '"><td><strong>' + esc(p.apelido) + '</strong>' + faixa + '</td>' +
+          '<td>' + (p.idade == null ? '?' : p.idade) + '</td><td>' + (ni == null ? '?' : ni) + '</td>' +
+          '<td>' + celulaNota(p, 'habilidade') + '</td><td>' + celulaNota(p, 'fisico') + '</td>' +
+          '<td>' + (p.avaliacoes || '<span style="color:#DC2626">0</span>') + '</td>' +
+          '<td class="score-total">' + fmt1(t) + '<div class="score-ok"></div></td></tr>';
+      }
       function scoreRender(){
         const busca = chaveApelido($('score-busca').value), filtro = $('score-filtro').value;
         const vis = scoreLista.filter(p => {
@@ -1567,21 +1611,45 @@
           if (filtro === 'pendente') return scoreTotal(p) == null;
           return true;
         });
-        $('score-body').innerHTML = vis.map(p => {
-          const faixa = p.idade >= 60 ? '<span class="score-faixa f60">+60</span>' : (p.idade != null && p.idade < 50 ? '<span class="score-faixa f50">-50</span>' : '');
-          const t = scoreTotal(p), ni = notaIdade(p.idade);
-          return '<tr><td><strong>' + esc(p.apelido) + '</strong>' + faixa + '</td>' +
-            '<td>' + (p.idade == null ? '?' : p.idade) + '</td><td>' + (ni == null ? '?' : ni) + '</td>' +
-            '<td>' + comConceito(p.habilidade) + '</td><td>' + comConceito(p.fisico) + '</td>' +
-            '<td>' + (p.avaliacoes || '<span style="color:#DC2626">0</span>') + '</td>' +
-            '<td class="score-total">' + fmt1(t) + '</td></tr>';
-        }).join('') || '<tr><td colspan="7" style="padding:1rem;color:#6B7280">Nenhum jogador neste filtro.</td></tr>';
+        $('score-body').innerHTML = vis.map(linhaScore).join('') || '<tr><td colspan="7" style="padding:1rem;color:#6B7280">Nenhum jogador neste filtro.</td></tr>';
+        scoreResumo();
+      }
+      function scoreResumo(){
         const completos = scoreLista.filter(p => scoreTotal(p) != null);
         const media = arr => arr.length ? fmt1(arr.reduce((s, p) => s + scoreTotal(p), 0) / arr.length) : '–';
         $('score-resumo').innerHTML = '<strong>' + completos.length + ' de ' + scoreLista.length + '</strong> jogadores com score · ' +
           'Score médio: +60 = ' + media(completos.filter(p => p.idade >= 60)) + ' · 50–59 = ' + media(completos.filter(p => p.idade >= 50 && p.idade < 60)) +
           ' · -50 = ' + media(completos.filter(p => p.idade < 50));
       }
+      // Escolheu a nota na lista: grava como avaliação do administrador e atualiza a média da linha
+      $('score-body').addEventListener('change', async e => {
+        const sel = e.target.closest('select[data-campo]'); if (!sel || !adminToken) return;
+        const ap = sel.getAttribute('data-ap'), campo = sel.getAttribute('data-campo');
+        const atual = Object.assign({ habilidade: null, fisico: null }, minhasNotas[ap]);
+        atual[campo] = sel.value === '' ? null : Number(sel.value);
+        sel.classList.toggle('vazio', sel.value === '');
+        const tr = sel.closest('tr'), ok = tr.querySelector('.score-ok');
+        ok.textContent = 'salvando...';
+        const res = (atual.habilidade == null && atual.fisico == null)
+          ? await sb.from('avaliacoes').delete().eq('token', adminToken).eq('apelido', ap)
+          : await sb.from('avaliacoes').upsert({ token: adminToken, apelido: ap, habilidade: atual.habilidade, fisico: atual.fisico, atualizado_em: new Date().toISOString() }, { onConflict: 'token,apelido' });
+        if (res.error){ ok.textContent = ''; scoreMsg('Não salvou a nota de ' + esc(ap) + ': ' + esc(traduzErro(res.error)), 'error'); return; }
+        minhasNotas[ap] = atual;
+        const m = await sb.from('score_medio').select('habilidade,fisico,avaliacoes').eq('apelido', ap);
+        const p = scoreLista.find(x => x.apelido === ap);
+        if (p){
+          const n = (m.data && m.data[0]) || {};
+          p.habilidade = n.habilidade == null ? null : Number(n.habilidade);
+          p.fisico = n.fisico == null ? null : Number(n.fisico);
+          p.avaliacoes = n.avaliacoes ? Number(n.avaliacoes) : 0;
+          const novo = document.createElement('tbody'); novo.innerHTML = linhaScore(p);
+          tr.replaceWith(novo.firstChild);
+          const ok2 = document.querySelector('#score-body tr[data-linha="' + CSS.escape(ap) + '"] .score-ok');
+          if (ok2){ ok2.textContent = '✓ salvo'; setTimeout(() => { if (ok2.textContent === '✓ salvo') ok2.textContent = ''; }, 2500); }
+        }
+        scoreResumo();
+        avalCarregar();
+      });
       $('score-busca').addEventListener('input', scoreRender);
       $('score-filtro').addEventListener('change', scoreRender);
       $('score-atualizar').addEventListener('click', () => { scoreCarregar().catch(err => scoreMsg('Erro: ' + esc(err.message), 'error')); avalCarregar(); });

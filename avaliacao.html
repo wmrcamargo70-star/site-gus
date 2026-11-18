@@ -67,7 +67,7 @@
           <li><strong>Habilidade</strong>: técnica, passe, finalização, leitura de jogo.</li>
           <li><strong>Condicionamento físico</strong>: fôlego, velocidade, força, quanto aguenta correr.</li>
         </ul>
-        <div class="escala"><span><b>1</b> Ruim</span><span><b>2</b> Regular</span><span><b>3</b> Bom</span><span><b>4</b> Muito bom</span><span><b>5</b> Excelente</span></div>
+        <div class="escala"><span><b>1</b> Abaixo</span><span><b>2</b> Regular</span><span><b>3</b> Bom</span><span><b>4</b> Muito bom</span><span><b>5</b> Excelente</span></div>
         Cada nota <strong>salva na hora</strong>. Pode parar e voltar depois pelo mesmo link. Se não conhece o jogador, deixe em branco.
         As notas são <strong>sigilosas</strong>: só a coordenação vê, e o que vale é a média de todos os avaliadores.
       </div>
@@ -87,7 +87,7 @@
     const SUPABASE_ANON_KEY = 'sb_publishable_p_kBPt3iK7hHUEHSeMKryA_y0OPEt-f';
     const $ = id => document.getElementById(id);
     // Escala de notas (Wagner, 18/11/2026) — Habilidade e Condicionamento físico
-    const ESCALA = [[1, 'Ruim'], [2, 'Regular'], [3, 'Bom'], [4, 'Muito bom'], [5, 'Excelente']];
+    const ESCALA = [[1, 'Abaixo'], [2, 'Regular'], [3, 'Bom'], [4, 'Muito bom'], [5, 'Excelente']];
     const token = (new URLSearchParams(location.search).get('c') || '').trim();
     const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } }) : null;
     let jogadores = [];       // { apelido, idade }
