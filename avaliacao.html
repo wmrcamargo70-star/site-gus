@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Avaliação G.U.S.</title>
+  <meta name="description" content="Avaliação dos jogadores do G.U.S." />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta property="og:title" content="Avaliação dos jogadores — G.U.S." />
+  <meta property="og:description" content="Link pessoal para dar as notas de Habilidade e Condicionamento físico." />
+  <meta property="og:image" content="https://gus-estatisticas.vercel.app/mascote.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+  <style>
+    :root{--gus-red:#DC2626;--gus-blue:#1E40AF;--gus-blue-dark:#1E3A8A;--gray-50:#F9FAFB;--gray-100:#F3F4F6;--gray-200:#E5E7EB;--gray-500:#6B7280;--gray-700:#374151;--gray-900:#111827;--radius:12px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--gray-50);color:var(--gray-900);line-height:1.5;-webkit-font-smoothing:antialiased}
+    .topo{background:linear-gradient(135deg,var(--gus-blue) 0%,var(--gus-blue-dark) 100%);color:#fff;border-bottom:4px solid var(--gus-red);padding:1rem 16px;text-align:center}
+    .topo img{height:70px;width:auto}
+    .topo h1{font-family:'Bebas Neue',sans-serif;font-size:1.9rem;letter-spacing:2px;line-height:1.1}
+    .topo p{font-size:.9rem;opacity:.92}
+    main{max-width:620px;margin:0 auto;padding:1rem 16px 4rem}
+    .intro{background:#fff;border-radius:var(--radius);border-top:3px solid var(--gus-red);box-shadow:0 4px 6px -1px rgba(0,0,0,.08);padding:1rem 1.1rem;font-size:.92rem;color:var(--gray-700)}
+    .intro strong{color:var(--gray-900)}
+    .intro ul{margin:.5rem 0 0 1.1rem}
+    .barra{position:sticky;top:0;z-index:5;background:var(--gray-50);padding:.75rem 0 .5rem;display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+    .barra input,.barra select{flex:1;min-width:130px;padding:.65rem .8rem;border:2px solid var(--gray-200);border-radius:8px;font-family:inherit;font-size:.95rem;background:#fff}
+    .progresso{width:100%;font-size:.82rem;color:var(--gray-700)}
+    .progresso .trilho{height:6px;background:var(--gray-200);border-radius:3px;margin-top:.3rem;overflow:hidden}
+    .progresso .trilho span{display:block;height:100%;background:#16A34A;width:0}
+    .jog{background:#fff;border-radius:10px;border:1px solid var(--gray-200);padding:.75rem .8rem;margin-top:.6rem}
+    .jog.feito{border-left:4px solid #16A34A}
+    .jog-topo{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+    .jog-nome{font-weight:800;font-size:1.02rem}
+    .jog-idade{font-size:.78rem;color:var(--gray-500);font-weight:500;margin-left:.3rem}
+    .jog-status{font-size:.75rem;color:#16A34A;white-space:nowrap}
+    .linha{margin-top:.55rem}
+    .linha .rot{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--gray-700);letter-spacing:.3px;margin-bottom:.25rem}
+    .notas{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem}
+    .notas button{padding:.35rem 0 .3rem;border:2px solid var(--gray-200);background:#fff;border-radius:7px;font-family:inherit;font-weight:800;font-size:1rem;color:var(--gray-700);cursor:pointer;line-height:1.1}
+    .notas button small{display:block;font-size:.6rem;font-weight:600;letter-spacing:-.1px;margin-top:.1rem;white-space:nowrap}
+    .escala{display:flex;flex-wrap:wrap;gap:.3rem .8rem;margin:.6rem 0 .5rem;font-size:.82rem}
+    .escala b{display:inline-block;background:var(--gus-blue);color:#fff;border-radius:4px;width:1.3rem;text-align:center;margin-right:.2rem}
+    .notas button.sel{background:var(--gus-blue);border-color:var(--gus-blue);color:#fff}
+    .pular{margin-top:.45rem;font-size:.78rem;color:var(--gray-500);background:none;border:none;text-decoration:underline;cursor:pointer;font-family:inherit}
+    .aviso{padding:.85rem 1rem;border-radius:8px;margin-top:1rem;font-size:.92rem}
+    .aviso-erro{background:#FEE2E2;color:#991B1B;border-left:3px solid var(--gus-red)}
+    .aviso-info{background:#DBEAFE;color:var(--gus-blue-dark);border-left:3px solid var(--gus-blue)}
+    .vazio{text-align:center;color:var(--gray-500);padding:1.5rem 0}
+    footer{text-align:center;font-size:.8rem;color:var(--gray-500);margin-top:1.5rem}
+  </style>
+</head>
+<body>
+  <header class="topo">
+    <img src="mascote.png" alt="Mascote do G.U.S." />
+    <h1>Avaliação dos jogadores</h1>
+    <p>G.U.S. · Coordenação MGM 2026</p>
+  </header>
+  <main>
+    <div id="estado"></div>
+    <div id="app" style="display:none">
+      <div class="intro">
+        Olá, <strong id="nome-avaliador"></strong>! Dê a sua nota de <strong>1 a 5</strong> para cada jogador:
+        <ul>
+          <li><strong>Habilidade</strong>: técnica, passe, finalização, leitura de jogo.</li>
+          <li><strong>Condicionamento físico</strong>: fôlego, velocidade, força, quanto aguenta correr.</li>
+        </ul>
+        <div class="escala"><span><b>1</b> Ruim</span><span><b>2</b> Regular</span><span><b>3</b> Bom</span><span><b>4</b> Muito bom</span><span><b>5</b> Excelente</span></div>
+        Cada nota <strong>salva na hora</strong>. Pode parar e voltar depois pelo mesmo link. Se não conhece o jogador, deixe em branco.
+        As notas são <strong>sigilosas</strong>: só a coordenação vê, e o que vale é a média de todos os avaliadores.
+      </div>
+      <div class="barra">
+        <input type="text" id="busca" placeholder="Buscar jogador..." />
+        <select id="filtro"><option value="todos">Todos</option><option value="faltam">Faltam avaliar</option><option value="feitos">Já avaliados</option></select>
+        <div class="progresso"><span id="prog-txt"></span><div class="trilho"><span id="prog-bar"></span></div></div>
+      </div>
+      <div id="lista"></div>
+    </div>
+    <footer>Este link é pessoal: não repasse. · G.U.S.</footer>
+  </main>
+  <script>
+  (function(){
+    // Mesmo projeto e mesma chave PÚBLICA (publishable) do site. O link só funciona pelas funções do banco que conferem o token.
+    const SUPABASE_URL = 'https://shbchuwojfezwurboyie.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_p_kBPt3iK7hHUEHSeMKryA_y0OPEt-f';
+    const $ = id => document.getElementById(id);
+    // Escala de notas (Wagner, 18/11/2026) — Habilidade e Condicionamento físico
+    const ESCALA = [[1, 'Ruim'], [2, 'Regular'], [3, 'Bom'], [4, 'Muito bom'], [5, 'Excelente']];
+    const token = (new URLSearchParams(location.search).get('c') || '').trim();
+    const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { persistSession: false } }) : null;
+    let jogadores = [];       // { apelido, idade }
+    const notas = {};         // apelido -> { habilidade, fisico }
+    const salvando = {};
+
+    function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function chave(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase(); }
+    function estado(html, tipo){ $('estado').innerHTML = html ? '<div class="aviso aviso-' + tipo + '">' + html + '</div>' : ''; }
+    const feito = a => { const n = notas[a]; return !!n && n.habilidade != null && n.fisico != null; };
+
+    async function iniciar(){
+      if (!/^[A-Za-z0-9]{16,40}$/.test(token) || !sb){ estado('<strong>Link incompleto.</strong> Abra o link que a coordenação enviou para você.', 'erro'); return; }
+      estado('Carregando...', 'info');
+      try {
+        const info = await sb.rpc('avaliador_info', { p_token: token });
+        if (info.error) throw info.error;
+        if (!info.data || !info.data.length){ estado('<strong>Este link não é válido ou foi desativado.</strong> Fale com a coordenação.', 'erro'); return; }
+        $('nome-avaliador').textContent = info.data[0].nome;
+        const [minhas, html] = await Promise.all([ sb.rpc('minhas_avaliacoes', { p_token: token }), fetch('./', { cache: 'no-store' }).then(r => r.text()) ]);
+        if (minhas.error) throw minhas.error;
+        (minhas.data || []).forEach(n => { notas[n.apelido] = { habilidade: n.habilidade, fisico: n.fisico }; });
+        const m = html.match(/\/\*GUS_DATA_START\*\/const DATA = ([\s\S]*?);\/\*GUS_DATA_END\*\//);
+        if (!m) throw new Error('Não consegui carregar a lista de jogadores.');
+        jogadores = JSON.parse(m[1]).players
+          .filter(p => (p.classif || '').toLowerCase() !== 'corneta')
+          .map(p => ({ apelido: p.apelido, idade: p.idade }))
+          .sort((a, b) => a.apelido.localeCompare(b.apelido, 'pt-BR'));
+        estado('', '');
+        $('app').style.display = 'block';
+        render();
+      } catch (err){
+        console.error(err);
+        estado('Não foi possível carregar agora. Confira a internet e abra o link de novo.', 'erro');
+      }
+    }
+
+    function botoes(ap, campo){
+      const v = notas[ap] ? notas[ap][campo] : null;
+      return ESCALA.map(([n, nome]) => '<button type="button" data-ap="' + esc(ap) + '" data-campo="' + campo + '" data-n="' + n + '" class="' + (v === n ? 'sel' : '') + '">' + n + '<small>' + nome + '</small></button>').join('');
+    }
+    function cartao(p){
+      const n = notas[p.apelido], algum = n && (n.habilidade != null || n.fisico != null);
+      return '<div class="jog' + (feito(p.apelido) ? ' feito' : '') + '" data-card="' + esc(p.apelido) + '">' +
+        '<div class="jog-topo"><div><span class="jog-nome">' + esc(p.apelido) + '</span><span class="jog-idade">' + (p.idade != null ? p.idade + ' anos' : '') + '</span></div>' +
+        '<span class="jog-status">' + (feito(p.apelido) ? '✓ avaliado' : '') + '</span></div>' +
+        '<div class="linha"><span class="rot">Habilidade</span><div class="notas">' + botoes(p.apelido, 'habilidade') + '</div></div>' +
+        '<div class="linha"><span class="rot">Condicionamento físico</span><div class="notas">' + botoes(p.apelido, 'fisico') + '</div></div>' +
+        (algum ? '<button type="button" class="pular" data-limpar="' + esc(p.apelido) + '">Limpar (não conheço)</button>' : '') +
+      '</div>';
+    }
+    function progresso(){
+      const f = jogadores.filter(p => feito(p.apelido)).length;
+      $('prog-txt').textContent = f + ' de ' + jogadores.length + ' jogadores avaliados';
+      $('prog-bar').style.width = (jogadores.length ? f / jogadores.length * 100 : 0) + '%';
+    }
+    function render(){
+      const b = chave($('busca').value), fl = $('filtro').value;
+      const vis = jogadores.filter(p => (!b || chave(p.apelido).includes(b)) && (fl === 'todos' || (fl === 'faltam' ? !feito(p.apelido) : feito(p.apelido))));
+      $('lista').innerHTML = vis.map(cartao).join('') || '<p class="vazio">Nenhum jogador aqui.</p>';
+      progresso();
+    }
+    function atualizarCartao(ap){
+      const el = document.querySelector('[data-card="' + CSS.escape(ap) + '"]');
+      const p = jogadores.find(x => x.apelido === ap);
+      if (el && p){ el.outerHTML = cartao(p); }
+      progresso();
+    }
+    async function salvar(ap){
+      const n = notas[ap] || {};
+      salvando[ap] = (salvando[ap] || 0) + 1;
+      const meu = salvando[ap];
+      const { error } = await sb.rpc('registrar_avaliacao', { p_token: token, p_apelido: ap, p_habilidade: n.habilidade ?? null, p_fisico: n.fisico ?? null });
+      if (meu !== salvando[ap]) return;   // houve outra alteração depois
+      const st = document.querySelector('[data-card="' + CSS.escape(ap) + '"] .jog-status');
+      if (error){
+        console.error(error);
+        estado('Não salvou a nota de ' + esc(ap) + '. Confira a internet e toque de novo.', 'erro');
+        if (st) st.textContent = '⚠ não salvou';
+        return;
+      }
+      estado('', '');
+      if (st) st.textContent = feito(ap) ? '✓ avaliado' : (n.habilidade != null || n.fisico != null ? 'salvo' : '');
+    }
+    $('lista').addEventListener('click', e => {
+      const bt = e.target.closest('button[data-n]'), lp = e.target.closest('[data-limpar]');
+      if (bt){
+        const ap = bt.getAttribute('data-ap'), campo = bt.getAttribute('data-campo'), n = Number(bt.getAttribute('data-n'));
+        notas[ap] = notas[ap] || { habilidade: null, fisico: null };
+        notas[ap][campo] = notas[ap][campo] === n ? null : n;   // tocar de novo desmarca
+        atualizarCartao(ap);
+        salvar(ap);
+      } else if (lp){
+        const ap = lp.getAttribute('data-limpar');
+        notas[ap] = { habilidade: null, fisico: null };
+        atualizarCartao(ap);
+        salvar(ap);
+      }
+    });
+    $('busca').addEventListener('input', render);
+    $('filtro').addEventListener('change', render);
+    iniciar();
+  })();
+  </script>
+</body>
+</html>
